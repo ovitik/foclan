@@ -1,0 +1,16 @@
+fork d1 top_user paid_countries
+pack top_user paid_countries
+out
+
+branch top_user
+in users
+argmax score
+end
+
+branch paid_countries
+in orders
+keep paid
+map country
+uniq
+sort
+end

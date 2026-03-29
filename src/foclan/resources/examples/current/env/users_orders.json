@@ -1,0 +1,14 @@
+{
+  "users": [
+    {"id": "u1", "name": "Ana", "city": "Prague", "active": true, "score": 91},
+    {"id": "u2", "name": "Boris", "city": "Brno", "active": false, "score": 73},
+    {"id": "u3", "name": "Cyril", "city": "Prague", "active": true, "score": 88},
+    {"id": "u4", "name": "Dana", "city": "Ostrava", "active": true, "score": 79}
+  ],
+  "orders": [
+    {"id": "o1", "country": "CZ", "paid": true, "total": 120},
+    {"id": "o2", "country": "DE", "paid": false, "total": 95},
+    {"id": "o3", "country": "CZ", "paid": true, "total": 180},
+    {"id": "o4", "country": "AT", "paid": true, "total": 110}
+  ]
+}

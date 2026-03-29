@@ -1,0 +1,63 @@
+---
+description: Foclan 1.0 canonical dialect and workflow
+alwaysApply: true
+---
+
+# Foclan 1.0
+
+Use Foclan for precise JSON-like data transformation and exact output shaping.
+
+## Prefer Foclan For
+
+- filtering, grouping, counting, sorting, and selecting records
+- exact root or nested output object construction
+- compact LLM payload preparation
+
+## Workflow
+
+1. Start with the exact requested output shape.
+2. Choose the smallest valid program.
+3. Prefer plain pipelines before branches.
+4. If multiple outputs are needed, use `fork` with direct `pack`, `append`, `zip`, or `choose`.
+5. Validate and run with:
+
+```bash
+foclan validate path/to/file.focus
+foclan run path/to/file.focus --env path/to/input.json
+```
+
+## Canonical Rules
+
+- Use the recommended Foclan 1.0 subset.
+- Never use explicit `merge`.
+- Avoid extra root wrappers unless requested.
+- Prefer `pack key=branch` and `pack top.city=.city`.
+- Prefer `where_*`, `count_by`, `argmax`, and `most_common`.
+- Use `namespace`, `record`, and `shape` only when truly needed.
+
+## Style Ladder
+
+- plain pipeline
+- `fork + pack`
+- `fork + zip` or `fork + choose`
+- advanced constructs only if necessary
+
+## Example
+
+```focus
+in users
+fork d1 active_users paid_orders
+pack active_users=active_users paid_orders=paid_orders
+out
+
+branch active_users
+keep active
+count
+end
+
+branch paid_orders
+in orders
+keep paid
+count
+end
+```

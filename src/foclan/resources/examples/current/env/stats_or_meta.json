@@ -1,0 +1,19 @@
+{
+  "flag": true,
+  "users": [
+    {"id": "u1", "name": "Ana", "active": true},
+    {"id": "u2", "name": "Boris", "active": false},
+    {"id": "u3", "name": "Cyril", "active": true},
+    {"id": "u4", "name": "Dana", "active": true}
+  ],
+  "orders": [
+    {"id": "o1", "paid": true},
+    {"id": "o2", "paid": false},
+    {"id": "o3", "paid": true}
+  ],
+  "profile": {
+    "name": "Agent",
+    "tier": "pro",
+    "region": "eu"
+  }
+}

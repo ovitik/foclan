@@ -1,0 +1,39 @@
+in flag
+fork d1 stats meta
+choose stats meta
+out
+
+branch stats
+fork d2 active_users paid_orders
+pack active_users paid_orders
+end
+
+branch active_users
+in users
+keep active
+count
+end
+
+branch paid_orders
+in orders
+keep paid
+count
+end
+
+branch meta
+fork d2 profile_keys first_names
+pack profile_keys first_names
+end
+
+branch profile_keys
+in profile
+keys
+sort
+end
+
+branch first_names
+in users
+keep active
+map name
+take 3
+end

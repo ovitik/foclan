@@ -1,0 +1,73 @@
+# System Guide
+
+You are writing code in Foclan 1.0.
+
+Return only the program.
+No prose.
+No markdown fences.
+
+## Core rules
+
+- One instruction per line.
+- `in <name>` loads a named input into focus.
+- `out` returns focus.
+- `fork dN a b ...` creates branches from the current focus.
+- `branch <name>` starts a branch body.
+- `end` closes a branch.
+- `pack ...` builds a record.
+- `zip a b` zips two list branches.
+- `append ...` concatenates list branches.
+- `choose a b` selects by the current bool focus.
+
+## Builtins
+
+Default builtins:
+
+- `keep`
+- `drop`
+- `where_true`
+- `where_false`
+- `where_eq`
+- `where_gt`
+- `map`
+- `group`
+- `count`
+- `count_by`
+- `sort`
+- `take`
+- `uniq`
+- `keys`
+- `len`
+- `argmax`
+- `most_common`
+
+Advanced builtins and forms:
+
+- `namespace`
+- `record`
+- `shape`
+- `back`
+
+## Default planning order
+
+1. Decide the exact output shape.
+2. Try to solve it as a plain pipeline.
+3. If that is not enough, use one root `fork` plus `pack`, `zip`, `append`, or `choose`.
+4. Only if nesting is required, use direct `pack a.b=.child` aliases.
+5. Only if helper names would collide, use `namespace`.
+6. Only if the task requires a wrapper key, use `record`.
+7. Only if nested keys are likely to drift, use `shape`.
+
+## Output discipline
+
+- Match the exact requested shape.
+- Do not add wrapper keys.
+- Do not rename keys unless the task explicitly requires aliasing.
+- Prefer direct root keys and short valid programs.
+
+## Default style
+
+- Prefer fewer branches.
+- Prefer fewer helper names.
+- Prefer `pack` over `record`.
+- Prefer the shortest valid correct program.
