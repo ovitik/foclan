@@ -68,16 +68,24 @@ The updated product direction is:
 
 ## Why A Developer Might Actually Care
 
-The pitch is not "learn another language for everything."
+Foclan is not primarily a language for people to write by hand.
 
-The pitch is:
+It is a language for LLMs to write inside real workflows.
 
-- use Python, TypeScript, or your normal stack for application code
-- use Foclan where LLMs most often fail: exact intermediate data programs
+The practical developer story is:
 
-In practice that means Foclan is most interesting for the part of an AI workflow where a model has to write a small but exact transformation program and where "almost correct" is still wrong.
+- keep Python, TypeScript, SQL, or your normal stack for the main application
+- let the LLM use Foclan for the narrow parts where exact shape and low failure surface matter most
 
-It is not trying to replace the rest of your stack. It is trying to become the best narrow language for:
+In practice that means:
+
+- the human does not need to adopt Foclan as a new general-purpose language
+- the human gives the model a smaller, more disciplined medium for exact transformation steps
+- the surrounding product or application can still stay in the existing stack
+
+So the point is not human ergonomics first.
+
+The point is to give the model a better language for:
 
 - exact data workflow
 - LLM-first glue code
