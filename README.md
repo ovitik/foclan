@@ -520,6 +520,7 @@ That writes:
 - [docs/INSTALL.md](docs/INSTALL.md)
 - [docs/EXTENSIONS.md](docs/EXTENSIONS.md)
 - [docs/BRIDGES.md](docs/BRIDGES.md)
+- [docs/BRIDGE_SPEC.md](docs/BRIDGE_SPEC.md)
 - [docs/CODEX.md](docs/CODEX.md)
 - [docs/CURSOR.md](docs/CURSOR.md)
 - [docs/BENCHMARK.md](docs/BENCHMARK.md)

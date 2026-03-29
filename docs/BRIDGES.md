@@ -115,3 +115,5 @@ It only needs to be:
 - and excellent at handing off the exceptions in a controlled way
 
 That is likely the strongest long-term direction for the language.
+
+The concrete draft syntax, runtime contract, and plugin model are in [BRIDGE_SPEC.md](BRIDGE_SPEC.md).

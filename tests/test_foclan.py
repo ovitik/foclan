@@ -5,9 +5,11 @@ import types
 import pytest
 
 import foclan.benchmarking as foclan_benchmarking
+import foclan.bridges as foclan_bridges
 import foclan.cli as foclan_cli
 import foclan.extensions as foclan_extensions
 from foclan import load_prompt_bundle, load_public_tasks, parse_program, run_benchmark, run_program_text, validate_program
+from foclan.bridges import BridgeExecutionPolicy, BridgeRuntime
 from foclan.cli import main as foclan_main
 from foclan.examples import list_current_examples, load_example_env, load_example_source
 from foclan.extensions import HostExtension
@@ -264,6 +266,33 @@ def test_extensions_list_outputs_discovered_extensions(
     assert exit_code == 0
     assert "foclan-llm" in captured
     assert "llm_text" in captured
+
+
+def test_bridge_runtime_registry_loads_discovered_runtimes(monkeypatch: pytest.MonkeyPatch) -> None:
+    runtime = BridgeRuntime(
+        name="python",
+        description="Python bridge runtime",
+        handler=lambda source, focus, policy: focus,
+        default_policy=BridgeExecutionPolicy(timeout_seconds=2.0),
+    )
+
+    class FakeEntryPoint:
+        def load(self):
+            return lambda: runtime
+
+    monkeypatch.setattr(foclan_bridges, "entry_points", lambda **kwargs: [FakeEntryPoint()])
+    discovered = foclan_bridges.list_installed_bridge_runtimes()
+    loaded = foclan_bridges.load_bridge_runtimes()
+
+    assert discovered == (runtime,)
+    assert loaded["python"] == runtime
+
+
+def test_bridge_runtime_registry_rejects_duplicate_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    runtime = BridgeRuntime(name="python", description="runtime", handler=lambda source, focus, policy: focus)
+    monkeypatch.setattr(foclan_bridges, "list_installed_bridge_runtimes", lambda: (runtime, runtime))
+    with pytest.raises(ValueError, match="registered more than once"):
+        foclan_bridges.load_bridge_runtimes()
 
 
 def test_public_benchmark_suite_loads() -> None:
