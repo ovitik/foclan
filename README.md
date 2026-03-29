@@ -1,6 +1,6 @@
 # Foclan 1.0
 
-Foclan is a compact LLM-first language for precise data transformation and exact JSON-like output shaping.
+Foclan is a compact LLM-first orchestration language for precise data transformation, exact JSON-like output shaping, and agent-friendly workflow steps.
 
 The core idea is simple: in vibecoding, not only the prompt and the model matter. The language itself is also a variable.
 
@@ -58,6 +58,13 @@ The current focus is not on replacing a general-purpose language. The focus is o
 - filtering, grouping, counting, sorting, and selection
 - building precise JSON-like outputs
 - preparing compact payloads for downstream API or LLM calls
+- orchestrating narrow agent steps in a predictable way
+
+The updated product direction is:
+
+- keep the core language extremely small and LLM-optimized
+- add practical capability through extensions
+- and eventually allow controlled bridging into other languages when Foclan is not the right expression tool for a step
 
 ## Why A Developer Might Actually Care
 
@@ -69,6 +76,13 @@ The pitch is:
 - use Foclan where LLMs most often fail: exact intermediate data programs
 
 In practice that means Foclan is most interesting for the part of an AI workflow where a model has to write a small but exact transformation program and where "almost correct" is still wrong.
+
+It is not trying to replace the rest of your stack. It is trying to become the best narrow language for:
+
+- exact data workflow
+- LLM-first glue code
+- agent pipeline steps
+- compact transformation layers between systems
 
 ## Why Foclan Can Be Easier For LLMs
 
@@ -102,6 +116,9 @@ Good current fits:
 - schema-driven extraction pipelines
 - deterministic glue code between raw inputs and structured outputs
 - small "dashboard" style programs where key names and nesting must be exact
+- LLM extraction followed by deterministic cleanup and reshaping
+- compact orchestration steps inside larger agent workflows
+- data pipelines where the output contract matters more than general-purpose expressiveness
 
 Typical places where LLMs often do worse in Python than in Foclan:
 
@@ -117,6 +134,12 @@ Foclan is especially promising when the real target is not "general coding" but:
 - "return exactly this object"
 - "compose these few inputs into this exact contract"
 - "make the LLM stop improvising structure"
+
+In other words, Foclan is best thought of as:
+
+- a language for linearly transforming data
+- a language for shaping exact outputs
+- a language for orchestrating narrow steps in LLM-heavy workflows
 
 ## Benchmark Signals So Far
 
@@ -150,6 +173,8 @@ There are also real current drawbacks:
 - that overthinking can spend many hidden reasoning tokens
 - Python still has a huge familiarity advantage from training data
 
+Foclan also depends heavily on having good extensions for practical workflows. That is a feature of the architecture, not an accident: the core stays small on purpose.
+
 The good news is that the Foclan prompt can be kept stable and cached well, so the prompt-learning overhead is not fully wasted every time. But it is still a real disadvantage today.
 
 ## Why Give Foclan A Chance
@@ -174,6 +199,13 @@ The goal is a stable and reasonably broad LLM-first language for:
 - exact output shaping
 - compact intermediate application logic
 - practical coding with Codex, Cursor, and similar agent workflows
+- data and agent orchestration where each step should stay easy for an LLM to generate correctly
+
+The guiding idea now is:
+
+- Foclan core handles the parts that benefit from being highly constrained
+- extensions add practical power without bloating the core
+- bridges will eventually provide controlled escape hatches into other runtimes such as Python
 
 In other words: broad enough to be useful, but narrow enough to stay teachable and reliable.
 
@@ -208,6 +240,34 @@ Optional HTTP extension:
 ```bash
 python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-http"
 ```
+
+## Extension Philosophy
+
+Foclan is intentionally split into:
+
+- a very small core language
+- optional extension packages
+- and, in the future, bridge runtimes into other languages
+
+Extensions make sense when they do at least one of these:
+
+- simplify common LLM-written workflows
+- reduce token count compared with handwritten Python glue code
+- reduce failure surface for exact-output tasks
+- fit naturally into linear data or agent pipelines
+- add practical capability without forcing more syntax into the core language
+
+Extensions do **not** make sense when they:
+
+- only wrap Python without adding structure or reliability
+- introduce many competing idioms
+- bloat the prompt teaching burden
+- turn Foclan into a second general-purpose language
+
+See also:
+
+- [docs/EXTENSIONS.md](docs/EXTENSIONS.md)
+- [docs/BRIDGES.md](docs/BRIDGES.md)
 
 ## Quickstart
 
@@ -372,6 +432,42 @@ Headers can be passed directly or backed by environment variables:
 
 This keeps secrets in `.env` and out of the `.focus` program itself.
 
+## Available Extensions
+
+Current public extensions:
+
+- `foclan-llm`
+  Adds `.env`-backed `llm_text` and `llm_json` calls for OpenAI, Anthropic, and Google.
+- `foclan-io`
+  Adds deterministic local text, JSON, JSONL, and CSV file operations.
+- `foclan-http`
+  Adds minimal deterministic JSON/text HTTP GET and JSON POST calls.
+
+The intent is not to accumulate random plugins. The intent is to build an ecosystem of extensions that strengthen Foclan specifically for LLM-first data and agent workflows.
+
+## Bridging To Other Languages
+
+The likely next major core evolution is **bridging**.
+
+The idea is simple:
+
+- keep Foclan small and optimized for the things it does well
+- and provide a controlled escape hatch when a step is better expressed in another language
+
+In practice that means a future Foclan program may be able to:
+
+- stay mostly in Foclan for exact shaping and orchestration
+- hand the current `focus` to another runtime such as Python for one narrow step
+- then return to Foclan with the new `focus`
+
+This changes the role of Foclan in an important way:
+
+- Foclan does not need to become fully general-purpose
+- it only needs to be excellent at the LLM-friendly center of the workflow
+- and good at handing off the rest in a controlled, low-friction way
+
+See the early design direction in [docs/BRIDGES.md](docs/BRIDGES.md).
+
 ## Public Benchmark
 
 Foclan now ships with a bundled public exact-output benchmark suite.
@@ -422,6 +518,8 @@ That writes:
 - [docs/SCOPE.md](docs/SCOPE.md)
 - [docs/RECOMMENDED_DIALECT.md](docs/RECOMMENDED_DIALECT.md)
 - [docs/INSTALL.md](docs/INSTALL.md)
+- [docs/EXTENSIONS.md](docs/EXTENSIONS.md)
+- [docs/BRIDGES.md](docs/BRIDGES.md)
 - [docs/CODEX.md](docs/CODEX.md)
 - [docs/CURSOR.md](docs/CURSOR.md)
 - [docs/BENCHMARK.md](docs/BENCHMARK.md)
@@ -437,6 +535,8 @@ This repository is intentionally narrow:
 
 - yes: data manipulation, filtering, grouping, sorting, counting, exact response shaping
 - yes: compact payload preparation for downstream LLM/API code
+- yes: extension-driven capability for file, HTTP, LLM, and future SQL/schema workflows
+- yes: future controlled bridging to other runtimes
 - no: general-purpose application programming
 - no: experimental benchmark harnesses
 - no: optimization/search benchmark branches
@@ -451,6 +551,8 @@ The near-term plan is:
 - minimize output tokens and therefore latency
 - maximize correctness in both syntax and logic
 - improve real usability in Codex and Cursor workflows
+- expand capability primarily through extensions
+- introduce bridging only if it clearly improves expressiveness without hurting the core simplicity
 
 Only after that foundation is stable should more specialized features be added.
 

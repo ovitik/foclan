@@ -7,6 +7,7 @@ The rule is simple:
 - keep the core language small
 - add capability through extensions first
 - only expand the core when the gain is clear
+- use bridges instead of core growth when another runtime is the cleaner answer
 
 ## Design Principles
 
@@ -23,6 +24,7 @@ They should not add large amounts of:
 - new syntax variance
 - provider-specific complexity in the core language
 - human-only convenience at the cost of LLM reliability
+- arbitrary general-purpose power when an extension or bridge would be cleaner
 
 ## Highest-Value Product Features
 
@@ -133,11 +135,38 @@ Potential extension package:
 
 This is a strong fit because exact output contracts are already central to Foclan.
 
+### 9. `foclan-sql`
+
+Potential extension package:
+
+- deterministic SQL query and exec steps
+- SQLite and mainstream SQL backends via extension config
+- list-of-record outputs that plug back into normal Foclan transforms
+
+This fits the product direction very well because SQL is already declarative, data-oriented, and familiar to LLMs.
+
+## Bridge Directions
+
+### 10. Bridge runtimes
+
+The strongest candidate for new core capability is not a large syntax expansion.
+
+It is a small bridge mechanism that would let Foclan:
+
+- keep its constrained LLM-friendly core
+- and hand one narrow step to another runtime when that is cleaner
+
+The most likely first bridge is:
+
+- `foclan-python`
+
+This would be valuable because it gives Foclan an escape hatch without forcing the core language to become general-purpose.
+
 ## Possible Core Improvements
 
 These are only worth doing if they clearly improve LLM behavior.
 
-### 9. Safer nested output helpers
+### 11. Safer nested output helpers
 
 The strongest candidate for core evolution is any syntax that reduces:
 
@@ -147,7 +176,7 @@ The strongest candidate for core evolution is any syntax that reduces:
 
 But it should only be added if it is simpler than today's patterns, not just "more powerful."
 
-### 10. Simpler project-level conventions
+### 12. Simpler project-level conventions
 
 The language may not need more syntax if the product grows better conventions:
 
@@ -175,4 +204,5 @@ Avoid these unless there is overwhelming evidence:
 - turning Foclan into a general-purpose language
 - adding loops, classes, or large mutable-state features
 - adding provider-specific syntax directly into the core language
+- using bridges as an excuse to stop caring about a clean core
 - optimizing for human cleverness instead of LLM reliability
