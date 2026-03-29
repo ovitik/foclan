@@ -14,6 +14,33 @@ This repository is the standalone public `Foclan 1.0` package. It contains:
 - executable examples
 - Codex and Cursor integration scaffolds
 
+## The Story
+
+Most people working with vibecoding currently optimize two things:
+
+- the prompt
+- the model
+
+Foclan is built around a third variable:
+
+- the language the model is asked to think in
+
+That is the core bet behind the project.
+
+Human-oriented languages like Python are excellent for human authors. But an LLM is not a human author. It is a token predictor with strong priors, limited working memory, and a tendency to overbuild code when the language gives it too many degrees of freedom.
+
+Foclan tries to answer a narrow but important question:
+
+> What if the language itself was designed to make LLM-generated programs shorter, more exact, and less brittle?
+
+That is why Foclan is intentionally biased toward:
+
+- linear start-to-end flow
+- exact output shaping
+- very small state surface
+- fewer moving pieces per program
+- compact solutions that are easy to validate
+
 ## Why Foclan Exists
 
 Foclan is based on the hypothesis that LLM code quality can improve not only through:
@@ -31,6 +58,17 @@ The current focus is not on replacing a general-purpose language. The focus is o
 - filtering, grouping, counting, sorting, and selection
 - building precise JSON-like outputs
 - preparing compact payloads for downstream API or LLM calls
+
+## Why A Developer Might Actually Care
+
+The pitch is not "learn another language for everything."
+
+The pitch is:
+
+- use Python, TypeScript, or your normal stack for application code
+- use Foclan where LLMs most often fail: exact intermediate data programs
+
+In practice that means Foclan is most interesting for the part of an AI workflow where a model has to write a small but exact transformation program and where "almost correct" is still wrong.
 
 ## Why Foclan Can Be Easier For LLMs
 
@@ -50,6 +88,35 @@ The intended effect is:
 - shorter generated programs
 - lower output token counts
 - lower latency when the model uses the language well
+
+## Best Use-Cases
+
+The best current use-cases are the ones where Python is expressive for humans but too open-ended for LLMs.
+
+Good current fits:
+
+- exact JSON response shaping
+- nested report building from multiple inputs
+- filtering, counting, grouping, sorting, and top-selection
+- provider payload assembly before downstream API calls
+- schema-driven extraction pipelines
+- deterministic glue code between raw inputs and structured outputs
+- small "dashboard" style programs where key names and nesting must be exact
+
+Typical places where LLMs often do worse in Python than in Foclan:
+
+- they add extra wrapper objects like `report`, `summary`, or `result`
+- they return the right data under the wrong key names
+- they overuse helper variables and drift away from the requested output shape
+- they overengineer simple transforms into longer code with more failure surface
+- they make local logic mistakes while juggling state across multiple intermediate variables
+- they write plausibly correct code that is still structurally wrong for downstream systems
+
+Foclan is especially promising when the real target is not "general coding" but:
+
+- "return exactly this object"
+- "compose these few inputs into this exact contract"
+- "make the LLM stop improvising structure"
 
 ## Benchmark Signals So Far
 
@@ -84,6 +151,18 @@ There are also real current drawbacks:
 - Python still has a huge familiarity advantage from training data
 
 The good news is that the Foclan prompt can be kept stable and cached well, so the prompt-learning overhead is not fully wasted every time. But it is still a real disadvantage today.
+
+## Why Give Foclan A Chance
+
+If you are already using Codex, Cursor, Claude Code, or similar tools, Foclan is worth trying for at least three reasons:
+
+- it gives you a concrete way to trade language design against prompt complexity
+- it can make exact-output tasks more reliable than plain Python
+- it creates a benchmarkable, inspectable middle layer between raw model generation and production code
+
+Even if you never adopt it broadly, Foclan is useful as an experiment in a question that is becoming increasingly practical:
+
+> if agents are writing the code, should we keep assuming the optimal language is the same one humans preferred?
 
 ## What Foclan Is Trying To Become
 
@@ -248,6 +327,7 @@ That writes:
 - [docs/CODEX.md](docs/CODEX.md)
 - [docs/CURSOR.md](docs/CURSOR.md)
 - [docs/BENCHMARK.md](docs/BENCHMARK.md)
+- [docs/FUTURE_CAPABILITIES.md](docs/FUTURE_CAPABILITIES.md)
 - [prompt](prompt)
 - [examples](examples)
 - [templates](templates)
@@ -275,3 +355,8 @@ The near-term plan is:
 - improve real usability in Codex and Cursor workflows
 
 Only after that foundation is stable should more specialized features be added.
+
+See also:
+
+- [docs/ROADMAP.md](docs/ROADMAP.md)
+- [docs/FUTURE_CAPABILITIES.md](docs/FUTURE_CAPABILITIES.md)
