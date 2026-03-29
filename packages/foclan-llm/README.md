@@ -95,3 +95,9 @@ with an input object like:
   }
 }
 ```
+
+## Practical Notes
+
+- `llm_json` is usually the most reliable first thing to try.
+- `llm_text` may need a higher `max_output_tokens` than the final visible answer suggests, because modern APIs can spend part of the budget before emitting the final text.
+- If OpenAI or Gemini reports that generation stopped at the token limit, increase `max_output_tokens` in the request record.

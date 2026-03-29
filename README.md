@@ -126,6 +126,20 @@ foclan examples validate
 foclan examples run counts_dashboard
 ```
 
+Start a new local project scaffold:
+
+```bash
+foclan init project
+```
+
+That writes:
+
+- starter `programs/` and `inputs/`
+- a project `README.md`
+- `.env.example`
+- `AGENTS.md`
+- `.cursor/rules/foclan-v1.mdc`
+
 Render the packaged prompt bundle:
 
 ```bash
@@ -168,6 +182,19 @@ Typical run:
 foclan run programs/summarize.focus --env inputs.json --dotenv .env
 ```
 
+Bundled LLM examples:
+
+```bash
+foclan examples list
+foclan examples run openai_json_extract --dotenv .env
+foclan examples run openai_text_summary --dotenv .env
+```
+
+Notes:
+
+- `openai_json_extract` and `openai_text_summary` require `foclan-llm`
+- for text calls, do not starve `max_output_tokens`; modern provider APIs may spend part of the budget on reasoning before final text
+
 ## Scaffold Editor Integration
 
 In a target project where you want an LLM to write Foclan:
@@ -189,9 +216,11 @@ That writes:
 - [docs/INSTALL.md](docs/INSTALL.md)
 - [docs/CODEX.md](docs/CODEX.md)
 - [docs/CURSOR.md](docs/CURSOR.md)
+- [docs/BENCHMARK.md](docs/BENCHMARK.md)
 - [prompt](prompt)
 - [examples](examples)
 - [templates](templates)
+- [benchmarks](benchmarks)
 
 ## Product Boundary
 

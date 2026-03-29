@@ -46,6 +46,17 @@ foclan extensions list
 ## Project Scaffolding
 
 ```bash
+foclan init project
 foclan init codex
 foclan init cursor
 ```
+
+`foclan init project` is the fastest path for a new user. It writes:
+
+- `programs/`
+- `inputs/`
+- starter `.focus` programs
+- starter JSON inputs
+- `.env.example`
+- `AGENTS.md`
+- `.cursor/rules/foclan-v1.mdc`

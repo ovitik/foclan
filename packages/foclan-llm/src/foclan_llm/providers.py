@@ -306,6 +306,16 @@ def _extract_openai_text(response: dict[str, Any]) -> str:
                 chunks.append(content["text"])
     if chunks:
         return "".join(chunks).strip()
+    if response.get("status") == "incomplete":
+        incomplete_details = response.get("incomplete_details")
+        if isinstance(incomplete_details, dict) and incomplete_details.get("reason") == "max_output_tokens":
+            raise LLMProviderError(
+                "OpenAI stopped before emitting final text because max_output_tokens was exhausted. "
+                "Increase 'max_output_tokens' in the Foclan request."
+            )
+        raise LLMProviderError(
+            f"OpenAI response was incomplete before final text was emitted: {json.dumps(incomplete_details, ensure_ascii=False)}"
+        )
     raise LLMProviderError("OpenAI response did not contain output text.")
 
 
@@ -340,6 +350,16 @@ def _extract_google_text(response: dict[str, Any]) -> str:
                 chunks.append(part["text"])
     if chunks:
         return "".join(chunks).strip()
+    finish_reasons = [
+        candidate.get("finishReason")
+        for candidate in response.get("candidates", [])
+        if isinstance(candidate, dict) and candidate.get("finishReason") is not None
+    ]
+    if "MAX_TOKENS" in finish_reasons:
+        raise LLMProviderError(
+            "Google Gemini stopped at MAX_TOKENS before emitting final text. "
+            "Increase 'max_output_tokens' in the Foclan request."
+        )
     raise LLMProviderError("Google response did not contain text content.")
 
 

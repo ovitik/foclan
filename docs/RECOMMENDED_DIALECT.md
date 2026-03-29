@@ -18,11 +18,13 @@ Use the first style that solves the task:
 Prefer these by default:
 
 - `in`, `out`
+- `const`
 - `fork`, `branch`, `end`
 - `pack`, `append`, `zip`, `choose`
 - `keep`, `drop`, `where_true`, `where_false`, `where_eq`, `where_gt`
-- `map`, `group`, `count`, `count_by`, `sort`, `take`, `uniq`
-- `keys`, `len`, `argmax`, `most_common`
+- `map`, `group`, `count`, `count_by`, `top`, `sort`, `take`, `uniq`
+- `keys`, `len`, `get`, `argmax`, `most_common`
+- `call` when you intentionally use an installed host function such as `llm_text` or `llm_json`
 
 Treat these as advanced:
 
@@ -37,6 +39,7 @@ Treat these as advanced:
 - do not add wrapper objects unless requested
 - prefer `pack key=branch`
 - prefer `pack top.city=.city top.country=.country` for nested output
+- prefer keeping large schemas and request constants in input JSON unless the value is tiny
 
 ## Example
 

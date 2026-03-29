@@ -1,0 +1,14 @@
+{
+  "raw_text": "Customer Jane Novak works as finance lead. She is 54 years old, based in Prague, and prefers email contact.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {"type": "string"},
+      "age": {"type": "number"},
+      "city": {"type": "string"},
+      "role": {"type": "string"}
+    },
+    "required": ["name", "age", "city", "role"],
+    "additionalProperties": false
+  }
+}

@@ -11,6 +11,7 @@ No markdown fences.
 - One instruction per line.
 - `in <name>` loads a named input into focus.
 - `out` returns focus.
+- `const <value>` loads a literal scalar or JSON-like value into focus.
 - `fork dN a b ...` creates branches from the current focus.
 - `branch <name>` starts a branch body.
 - `end` closes a branch.
@@ -18,6 +19,7 @@ No markdown fences.
 - `zip a b` zips two list branches.
 - `append ...` concatenates list branches.
 - `choose a b` selects by the current bool focus.
+- `call <host_function>` passes the current focus to an installed host function such as `llm_text` or `llm_json`.
 
 ## Builtins
 
@@ -33,13 +35,17 @@ Default builtins:
 - `group`
 - `count`
 - `count_by`
+- `top`
 - `sort`
 - `take`
 - `uniq`
 - `keys`
 - `len`
+- `get`
 - `argmax`
 - `most_common`
+- `const`
+- `call`
 
 Advanced builtins and forms:
 
@@ -71,3 +77,4 @@ Advanced builtins and forms:
 - Prefer fewer helper names.
 - Prefer `pack` over `record`.
 - Prefer the shortest valid correct program.
+- For simple provider payload assembly, use `const`, `pack`, and `call`.

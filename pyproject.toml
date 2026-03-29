@@ -27,6 +27,11 @@ foclan = [
   "resources/examples/current/env/*.json",
   "resources/templates/codex/*.md",
   "resources/templates/cursor/*.mdc",
+  "resources/templates/project/*.md",
+  "resources/templates/project/*.txt",
+  "resources/templates/project/*.example",
+  "resources/templates/project/programs/*.focus",
+  "resources/templates/project/inputs/*.json",
 ]
 
 [tool.pytest.ini_options]

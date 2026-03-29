@@ -1,0 +1,15 @@
+fork d1 active_users paid_orders
+pack active_users=active_users paid_orders=paid_orders
+out
+
+branch active_users
+in users
+keep active
+count
+end
+
+branch paid_orders
+in orders
+keep paid
+count
+end

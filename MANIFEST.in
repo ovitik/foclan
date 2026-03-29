@@ -1,1 +1,1 @@
-recursive-include src/foclan/resources *.md *.mdc *.focus *.json
+recursive-include src/foclan/resources *.md *.mdc *.focus *.json *.txt *.example

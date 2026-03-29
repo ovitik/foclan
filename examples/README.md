@@ -12,3 +12,11 @@ foclan examples list
 foclan examples validate
 foclan examples run counts_dashboard
 ```
+
+Some current examples require the optional `foclan-llm` extension. Those show up in
+`foclan examples list` with a `requires_extensions` field and can be run like:
+
+```bash
+foclan examples run openai_json_extract --dotenv .env
+foclan examples run openai_text_summary --dotenv .env
+```

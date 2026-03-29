@@ -11,6 +11,7 @@ class ExampleEntry:
     program_resource: tuple[str, ...]
     env_resource: tuple[str, ...]
     description: str
+    requires_extensions: tuple[str, ...] = ()
 
     @property
     def program_hint(self) -> str:
@@ -51,6 +52,20 @@ _EXAMPLE_MANIFEST: tuple[ExampleEntry, ...] = (
         program_resource=("examples", "current", "prepare_llm_payload.focus"),
         env_resource=("examples", "current", "env", "llm_payload.json"),
         description="Assemble a simple provider payload object.",
+    ),
+    ExampleEntry(
+        name="openai_text_summary",
+        program_resource=("examples", "current", "openai_text_summary.focus"),
+        env_resource=("examples", "current", "env", "openai_text_summary.json"),
+        description="Call llm_text through the optional foclan-llm extension.",
+        requires_extensions=("foclan-llm",),
+    ),
+    ExampleEntry(
+        name="openai_json_extract",
+        program_resource=("examples", "current", "openai_json_extract.focus"),
+        env_resource=("examples", "current", "env", "openai_json_extract.json"),
+        description="Call llm_json through the optional foclan-llm extension.",
+        requires_extensions=("foclan-llm",),
     ),
 )
 

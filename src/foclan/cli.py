@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     prompt_parser.add_argument("--inputs-file", type=Path)
 
     init_parser = subparsers.add_parser("init", help="Write Codex or Cursor integration files into a project.")
-    init_parser.add_argument("target", choices=("codex", "cursor", "all"))
+    init_parser.add_argument("target", choices=("codex", "cursor", "all", "project"))
     init_parser.add_argument("--project-dir", type=Path, default=Path.cwd())
     init_parser.add_argument("--force", action="store_true")
 
@@ -48,6 +49,7 @@ def main(argv: list[str] | None = None) -> int:
 
     examples_run = examples_subparsers.add_parser("run", help="Run a current example with its default env.")
     examples_run.add_argument("name")
+    examples_run.add_argument("--dotenv", nargs="?", const=Path(".env"), type=Path)
 
     args = parser.parse_args(argv)
 
@@ -72,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
         inputs_json = None
         if args.inputs_file is not None:
             inputs_json = _read_text(args.inputs_file).strip()
-        print(
+        _safe_print(
             bundle.assemble(
                 include_anti_overthinking=args.anti_overthinking,
                 task_text=args.task,
@@ -108,6 +110,7 @@ def main(argv: list[str] | None = None) -> int:
                     "program": entry.program_hint,
                     "env": entry.env_hint,
                     "description": entry.description,
+                    "requires_extensions": list(entry.requires_extensions),
                 }
                 for entry in list_current_examples()
             ]
@@ -127,9 +130,19 @@ def main(argv: list[str] | None = None) -> int:
 
         if args.examples_command == "run":
             entry = get_current_example(args.name)
+            installed_extensions = {extension.name for extension in list_installed_extensions()}
+            missing_extensions = [name for name in entry.requires_extensions if name not in installed_extensions]
+            if missing_extensions:
+                joined = ", ".join(missing_extensions)
+                raise RuntimeError(
+                    f"Example '{entry.name}' requires missing extension(s): {joined}. "
+                    "Install the optional package(s) and retry."
+                )
+            if args.dotenv is not None:
+                _load_dotenv(args.dotenv)
             source = load_example_source(entry)
             env = load_example_env(entry)
-            result = run_program_text(source, env=env)
+            result = run_program_text(source, env=env, host_functions=load_host_functions())
             print(json.dumps(result.value, ensure_ascii=False, indent=2, sort_keys=True))
             return 0
 
@@ -157,3 +170,13 @@ def _load_dotenv(path: Path) -> None:
             "Loading .env files requires python-dotenv. Install foclan-llm or python-dotenv."
         ) from exc
     load_dotenv(path, override=False)
+
+
+def _safe_print(text: str) -> None:
+    try:
+        print(text)
+    except BrokenPipeError:
+        try:
+            sys.stdout.close()
+        finally:
+            raise SystemExit(0)

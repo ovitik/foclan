@@ -147,3 +147,38 @@ branch prompt
 in question
 end
 ```
+
+## Example 7: Live JSON extraction
+
+What it does: builds one request object and sends it to `llm_json`.
+
+```text
+fork d1 provider model system input schema max_output_tokens
+pack provider=provider model=model system=system input=input schema=schema max_output_tokens=max_output_tokens
+call llm_json
+out
+
+branch provider
+const "openai"
+end
+
+branch model
+const "gpt-5-mini"
+end
+
+branch system
+const "Extract a compact person record."
+end
+
+branch input
+in raw_text
+end
+
+branch schema
+in schema
+end
+
+branch max_output_tokens
+const 200
+end
+```

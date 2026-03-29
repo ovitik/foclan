@@ -84,6 +84,8 @@ def test_cli_examples_list_outputs_current_examples(capsys: pytest.CaptureFixtur
     assert exit_code == 0
     assert "counts_dashboard" in captured
     assert "prepare_llm_payload" in captured
+    assert "openai_json_extract" in captured
+    assert "requires_extensions" in captured
 
 
 def test_cli_examples_run_counts_dashboard(capsys: pytest.CaptureFixture[str]) -> None:
@@ -92,6 +94,29 @@ def test_cli_examples_run_counts_dashboard(capsys: pytest.CaptureFixture[str]) -
     assert exit_code == 0
     assert '"active_users": 3' in captured
     assert '"paid_orders": 3' in captured
+
+
+def test_cli_examples_run_accepts_dotenv(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dotenv_path = tmp_path / ".env"
+    dotenv_path.write_text("OPENAI_API_KEY=test\n", encoding="utf-8")
+    loaded: list[Path] = []
+    monkeypatch.setattr(foclan_cli, "_load_dotenv", lambda path: loaded.append(path))
+    exit_code = foclan_main(["examples", "run", "counts_dashboard", "--dotenv", str(dotenv_path)])
+    capsys.readouterr()
+    assert exit_code == 0
+    assert loaded == [dotenv_path]
+
+
+def test_cli_examples_run_llm_example_requires_extension(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(foclan_cli, "list_installed_extensions", lambda: ())
+    with pytest.raises(RuntimeError, match="requires missing extension"):
+        foclan_main(["examples", "run", "openai_json_extract"])
 
 
 def test_write_scaffold_creates_codex_and_cursor_files(tmp_path: Path) -> None:
@@ -106,6 +131,20 @@ def test_cli_init_cursor_writes_rule(tmp_path: Path, capsys: pytest.CaptureFixtu
     captured = capsys.readouterr().out
     assert exit_code == 0
     assert "foclan-v1.mdc" in captured
+    assert tmp_path.joinpath(".cursor", "rules", "foclan-v1.mdc").exists()
+
+
+def test_cli_init_project_writes_starter_files(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = foclan_main(["init", "project", "--project-dir", str(tmp_path)])
+    captured = capsys.readouterr().out
+    assert exit_code == 0
+    assert "counts_dashboard.focus" in captured
+    assert tmp_path.joinpath("README.md").exists()
+    assert tmp_path.joinpath("programs", "counts_dashboard.focus").exists()
+    assert tmp_path.joinpath("programs", "extract_contact.focus").exists()
+    assert tmp_path.joinpath("inputs", "users_orders.json").exists()
+    assert tmp_path.joinpath(".env.example").exists()
+    assert tmp_path.joinpath("AGENTS.md").exists()
     assert tmp_path.joinpath(".cursor", "rules", "foclan-v1.mdc").exists()
 
 
@@ -124,6 +163,19 @@ def test_packaged_prompt_and_examples_match_repo_files() -> None:
     example_files = sorted((ROOT / "examples" / "current").glob("*.focus"))
     for path in example_files:
         packaged = ROOT / "src" / "foclan" / "resources" / "examples" / "current" / path.name
+        assert packaged.read_text(encoding="utf-8") == path.read_text(encoding="utf-8")
+
+    template_files = [
+        ROOT / "templates" / "project" / "README.md",
+        ROOT / "templates" / "project" / "gitignore.txt",
+        ROOT / "templates" / "project" / "env.example",
+        ROOT / "templates" / "project" / "programs" / "counts_dashboard.focus",
+        ROOT / "templates" / "project" / "programs" / "extract_contact.focus",
+        ROOT / "templates" / "project" / "inputs" / "users_orders.json",
+        ROOT / "templates" / "project" / "inputs" / "contact_extract.json",
+    ]
+    for path in template_files:
+        packaged = ROOT / "src" / "foclan" / "resources" / "templates" / Path(*path.relative_to(ROOT / "templates").parts)
         assert packaged.read_text(encoding="utf-8") == path.read_text(encoding="utf-8")
 
 

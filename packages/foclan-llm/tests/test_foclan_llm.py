@@ -125,3 +125,19 @@ def test_require_env_raises_for_missing_key(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     with pytest.raises(providers.LLMConfigError, match="OPENAI_API_KEY"):
         providers._require_env("OPENAI_API_KEY")
+
+
+def test_openai_incomplete_error_mentions_max_output_tokens() -> None:
+    with pytest.raises(providers.LLMProviderError, match="max_output_tokens"):
+        providers._extract_openai_text(
+            {
+                "status": "incomplete",
+                "incomplete_details": {"reason": "max_output_tokens"},
+                "output": [],
+            }
+        )
+
+
+def test_google_max_tokens_error_is_clear() -> None:
+    with pytest.raises(providers.LLMProviderError, match="MAX_TOKENS"):
+        providers._extract_google_text({"candidates": [{"finishReason": "MAX_TOKENS"}]})
