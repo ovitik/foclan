@@ -47,13 +47,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "run":
         env = _load_json(args.env)
-        source = args.program.read_text(encoding="utf-8")
+        source = _read_text(args.program)
         result = run_program_text(source, env=env)
         print(json.dumps(result.value, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
     if args.command == "validate":
-        source = args.program.read_text(encoding="utf-8")
+        source = _read_text(args.program)
         program = parse_program(source)
         result = validate_program(program)
         print(json.dumps({"ok": True, "max_branch_depth": result.max_branch_depth}, ensure_ascii=False, indent=2))
@@ -63,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         bundle = load_prompt_bundle()
         inputs_json = None
         if args.inputs_file is not None:
-            inputs_json = args.inputs_file.read_text(encoding="utf-8").strip()
+            inputs_json = _read_text(args.inputs_file).strip()
         print(
             bundle.assemble(
                 include_anti_overthinking=args.anti_overthinking,
@@ -116,7 +116,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _load_json(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(_read_text(path))
     if not isinstance(data, dict):
         raise ValueError(f"{path} must contain a JSON object.")
     return data
+
+
+def _read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8-sig")

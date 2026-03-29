@@ -68,7 +68,7 @@ def run_program_text(source: str, env: dict[str, Any], host_functions: dict[str,
 
 def _enforce_v1_subset(source: str) -> None:
     for line_no, raw_line in enumerate(source.splitlines(), start=1):
-        line = raw_line.split("#", 1)[0].strip()
+        line = raw_line.lstrip("\ufeff").split("#", 1)[0].strip()
         if not line:
             continue
 

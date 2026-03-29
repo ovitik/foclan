@@ -122,3 +122,40 @@ def test_packaged_prompt_and_examples_match_repo_files() -> None:
     for path in example_files:
         packaged = ROOT / "src" / "foclan" / "resources" / "examples" / "current" / path.name
         assert packaged.read_text(encoding="utf-8") == path.read_text(encoding="utf-8")
+
+
+def test_cli_accepts_utf8_bom_program_and_env(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    program = tmp_path / "counts_dashboard.focus"
+    env_file = tmp_path / "users_orders.json"
+    program.write_text(
+        (
+            "in users\n"
+            "fork d1 active_users paid_orders\n"
+            "pack active_users=active_users paid_orders=paid_orders\n"
+            "out\n\n"
+            "branch active_users\n"
+            "keep active\n"
+            "count\n"
+            "end\n\n"
+            "branch paid_orders\n"
+            "in orders\n"
+            "keep paid\n"
+            "count\n"
+            "end\n"
+        ),
+        encoding="utf-8-sig",
+    )
+    env_file.write_text(
+        (
+            '{\n'
+            '  "users": [{"active": true}, {"active": false}, {"active": true}],\n'
+            '  "orders": [{"paid": true}, {"paid": true}]\n'
+            '}\n'
+        ),
+        encoding="utf-8-sig",
+    )
+
+    exit_code = foclan_main(["run", str(program), "--env", str(env_file)])
+    captured = capsys.readouterr().out
+    assert exit_code == 0
+    assert '"active_users": 2' in captured
