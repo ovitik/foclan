@@ -36,6 +36,7 @@ SUPPORTED_DEFAULT_OPS = {
     "argmax",
     "most_common",
     "const",
+    "call",
 }
 
 SUPPORTED_ADVANCED_OPS = {

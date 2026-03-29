@@ -164,6 +164,16 @@ def test_cli_accepts_utf8_bom_program_and_env(tmp_path: Path, capsys: pytest.Cap
     assert '"active_users": 2' in captured
 
 
+def test_call_is_allowed_in_product_subset() -> None:
+    source = """
+in request
+call llm_text
+out
+""".strip()
+    program = parse_program(source)
+    validate_program(program)
+
+
 def test_extensions_list_outputs_discovered_extensions(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
