@@ -27,6 +27,14 @@ def test_counts_dashboard_runs() -> None:
     assert result.value == {"active_users": 3, "paid_orders": 3}
 
 
+def test_top_city_program_runs() -> None:
+    source = (ROOT / "examples" / "current" / "active_top_city.focus").read_text(encoding="utf-8")
+    env_path = ROOT / "examples" / "current" / "env" / "users_orders.json"
+    env = __import__("json").loads(env_path.read_text(encoding="utf-8"))
+    result = run_program_text(source, env=env)
+    assert result.value == "Prague"
+
+
 def test_rejects_explicit_merge_keyword() -> None:
     source = """
 in users

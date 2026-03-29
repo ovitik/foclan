@@ -27,6 +27,7 @@ SUPPORTED_DEFAULT_OPS = {
     "group",
     "count",
     "count_by",
+    "top",
     "sort",
     "take",
     "uniq",
