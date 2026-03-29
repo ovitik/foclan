@@ -4,10 +4,11 @@ import copy
 from dataclasses import dataclass
 from typing import Any
 
+from .bridges import BridgeRuntime
 from .errors import RuntimeError as FocusRuntimeError
 from .errors import TypeError as FocusTypeError
 from .errors import UnknownLabel
-from .ir import Back, Fork, In, Merge, Out, Program, Record, ShapeDecl, StatementT, Step
+from .ir import Back, Bridge, Fork, In, Merge, Out, Program, Record, ShapeDecl, StatementT, Step
 from .ops import HostFunction, apply_builtin
 from .parser import parse_program
 from .validator import ValidationResult, validate_program
@@ -31,10 +32,12 @@ class Executor:
         program: Program,
         env: dict[str, Any],
         host_functions: dict[str, HostFunction] | None = None,
+        bridge_runtimes: dict[str, BridgeRuntime] | None = None,
     ) -> None:
         self.program = program
         self.env = env
         self.host_functions = host_functions or {}
+        self.bridge_runtimes = bridge_runtimes or {}
         self.output_shape_paths: tuple[str, ...] | None = None
 
     def run(self) -> Any:
@@ -76,6 +79,8 @@ class Executor:
             elif isinstance(statement, ShapeDecl):
                 if flow_name == "main":
                     self.output_shape_paths = statement.paths
+            elif isinstance(statement, Bridge):
+                focus = self._execute_bridge(statement, focus)
             elif isinstance(statement, Out):
                 if statement.label:
                     snapshots[statement.label] = self._snapshot(focus)
@@ -151,14 +156,31 @@ class Executor:
         branch_results[branch_name] = self._snapshot(result)
         return self._snapshot(result)
 
+    def _execute_bridge(self, statement: Bridge, focus: Any) -> Any:
+        runtime = self.bridge_runtimes.get(statement.runtime)
+        if runtime is None:
+            raise FocusRuntimeError(f"Unknown bridge runtime '{statement.runtime}'.")
+        try:
+            result = runtime.handler(statement.source, self._snapshot(focus), runtime.default_policy)
+        except Exception as exc:  # pragma: no cover - defensive wrapper
+            if isinstance(exc, FocusRuntimeError):
+                raise
+            raise FocusRuntimeError(f"Bridge '{statement.runtime}' failed: {exc}") from exc
+        return self._snapshot(result)
+
     @staticmethod
     def _snapshot(value: Any) -> Any:
         return copy.deepcopy(value)
 
 
-def run_program(program: Program, env: dict[str, Any], host_functions: dict[str, HostFunction] | None = None) -> ExecutionResult:
+def run_program(
+    program: Program,
+    env: dict[str, Any],
+    host_functions: dict[str, HostFunction] | None = None,
+    bridge_runtimes: dict[str, BridgeRuntime] | None = None,
+) -> ExecutionResult:
     validation = validate_program(program)
-    executor = Executor(program=program, env=env, host_functions=host_functions)
+    executor = Executor(program=program, env=env, host_functions=host_functions, bridge_runtimes=bridge_runtimes)
     value = executor.run()
     return ExecutionResult(value=value, validation=validation)
 
@@ -167,9 +189,10 @@ def run_program_text(
     source: str,
     env: dict[str, Any],
     host_functions: dict[str, HostFunction] | None = None,
+    bridge_runtimes: dict[str, BridgeRuntime] | None = None,
 ) -> ExecutionResult:
     program = parse_program(source)
-    return run_program(program, env=env, host_functions=host_functions)
+    return run_program(program, env=env, host_functions=host_functions, bridge_runtimes=bridge_runtimes)
 
 
 def _nest_record(path: list[str], value: Any) -> Any:

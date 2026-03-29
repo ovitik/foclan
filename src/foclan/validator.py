@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import DuplicateLabel, InvalidBackTarget, InvalidMerge, ParseError, UnknownBranch, UnknownLabel
-from .ir import Back, Fork, In, Merge, Out, Program, Record, ShapeDecl, StatementT, Step
+from .ir import Back, Bridge, Fork, In, Merge, Out, Program, Record, ShapeDecl, StatementT, Step
 from .ops import BUILTIN_SPECS, ZERO_ARG_ELEMENT_OPS, parse_literal
 
 SHAPE_UNKNOWN = "unknown"
@@ -102,6 +102,12 @@ def validate_program(program: Program) -> ValidationResult:
                 if shape_decl_count > 1:
                     raise ParseError(f"Line {statement.line_no}: only one shape declaration is allowed.")
                 _validate_shape_decl(statement)
+            elif isinstance(statement, Bridge):
+                if not statement.runtime:
+                    raise ParseError(f"Line {statement.line_no}: bridge runtime name must be non-empty.")
+                if not statement.source.strip():
+                    raise ParseError(f"Line {statement.line_no}: bridge '{statement.runtime}' body must not be empty.")
+                current_shape = SHAPE_UNKNOWN
             elif isinstance(statement, Out):
                 seen_out = True
 

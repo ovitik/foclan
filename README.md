@@ -241,6 +241,12 @@ Optional HTTP extension:
 python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-http"
 ```
 
+Optional Python bridge runtime:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-python"
+```
+
 ## Extension Philosophy
 
 Foclan is intentionally split into:
@@ -443,18 +449,23 @@ Current public extensions:
 - `foclan-http`
   Adds minimal deterministic JSON/text HTTP GET and JSON POST calls.
 
+Current public bridge runtimes:
+
+- `foclan-python`
+  Adds a constrained Python `focus -> result` bridge for narrow steps that are awkward in pure Foclan.
+
 The intent is not to accumulate random plugins. The intent is to build an ecosystem of extensions that strengthen Foclan specifically for LLM-first data and agent workflows.
 
 ## Bridging To Other Languages
 
-The likely next major core evolution is **bridging**.
+Bridging is now a public product direction and the first bridge runtime package already exists.
 
 The idea is simple:
 
 - keep Foclan small and optimized for the things it does well
 - and provide a controlled escape hatch when a step is better expressed in another language
 
-In practice that means a future Foclan program may be able to:
+In practice that means a Foclan program will be able to:
 
 - stay mostly in Foclan for exact shaping and orchestration
 - hand the current `focus` to another runtime such as Python for one narrow step
@@ -466,7 +477,16 @@ This changes the role of Foclan in an important way:
 - it only needs to be excellent at the LLM-friendly center of the workflow
 - and good at handing off the rest in a controlled, low-friction way
 
-See the early design direction in [docs/BRIDGES.md](docs/BRIDGES.md).
+The first bridge runtime package is:
+
+- `foclan-python`
+
+The remaining work is to wire the `bridge <runtime> ... end` syntax fully into the public recommended workflow and extend examples and docs around it.
+
+See:
+
+- [docs/BRIDGES.md](docs/BRIDGES.md)
+- [docs/BRIDGE_SPEC.md](docs/BRIDGE_SPEC.md)
 
 ## Public Benchmark
 

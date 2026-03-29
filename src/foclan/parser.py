@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 
 from .errors import DuplicateBranch, ParseError
-from .ir import Back, Branch, Fork, In, Merge, Out, Program, Record, ShapeDecl, StatementT, Step
+from .ir import Back, Branch, Bridge, Fork, In, Merge, Out, Program, Record, ShapeDecl, StatementT, Step
 
 DEPTH_RE = re.compile(r"^d(\d+)$")
 
@@ -69,6 +69,10 @@ class _Parser:
                 self._parse_branch(tokens, line_no, scope)
                 continue
 
+            if op == "bridge":
+                flow.append(self._parse_bridge(tokens, line_no))
+                continue
+
             if op == "namespace":
                 if len(tokens) != 2:
                     raise ParseError(f"Line {line_no}: namespace requires exactly one name.")
@@ -103,6 +107,28 @@ class _Parser:
             raise ParseError(f"Line {line_no}: branch '{branch_name}' is missing a closing end.")
 
         self.branches[branch_name] = Branch(name=branch_name, flow=tuple(branch_flow), line_no=line_no)
+
+    def _parse_bridge(self, tokens: list[str], line_no: int) -> Bridge:
+        if len(tokens) != 2:
+            raise ParseError(f"Line {line_no}: bridge requires exactly one runtime name.")
+        runtime = _normalize_name(tokens[1])
+        self.index += 1
+        body_lines: list[str] = []
+
+        while self.index < len(self.raw_lines):
+            current_line = _normalize_line(self.raw_lines[self.index])
+            if current_line == "end":
+                self.index += 1
+                return Bridge(
+                    label=None,
+                    line_no=line_no,
+                    runtime=runtime,
+                    source="\n".join(body_lines).strip(),
+                )
+            body_lines.append(self.raw_lines[self.index].rstrip("\r\n"))
+            self.index += 1
+
+        raise ParseError(f"Line {line_no}: bridge '{runtime}' is missing a closing end.")
 
     def _infer_branch_definition_name(self, token: str, scope: tuple[str, ...]) -> str:
         normalized = _normalize_name(token)
@@ -239,7 +265,7 @@ def _parse_statement(line: str, line_no: int, scope: tuple[str, ...]) -> Stateme
             raise ParseError(f"Line {line_no}: back requires exactly one target label.")
         return Back(label=label, line_no=line_no, target_label=args[0])
 
-    if op in {"branch", "end", "namespace", "endns"}:
+    if op in {"branch", "end", "namespace", "endns", "bridge"}:
         raise ParseError(f"Line {line_no}: unexpected '{op}'.")
 
     return Step(label=label, line_no=line_no, op=op, args=args)

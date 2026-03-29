@@ -101,6 +101,10 @@ The expected direction is:
 - timeout on execution
 - explicit policy if unsafe execution is ever allowed
 
+The first public bridge runtime package now exists:
+
+- `foclan-python`
+
 ## Product Impact
 
 Bridges change the role of Foclan in an important way.

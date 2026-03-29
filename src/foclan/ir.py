@@ -57,7 +57,13 @@ class ShapeDecl(Statement):
     paths: tuple[str, ...]
 
 
-StatementT: TypeAlias = In | Out | Step | Fork | Merge | Record | Back | ShapeDecl
+@dataclass(frozen=True)
+class Bridge(Statement):
+    runtime: str
+    source: str
+
+
+StatementT: TypeAlias = In | Out | Step | Fork | Merge | Record | Back | ShapeDecl | Bridge
 
 
 @dataclass(frozen=True)

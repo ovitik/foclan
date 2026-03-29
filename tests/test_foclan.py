@@ -251,6 +251,26 @@ out
     validate_program(program)
 
 
+def test_bridge_is_allowed_in_product_subset_and_runs() -> None:
+    source = """
+in users
+bridge python
+result = [item["name"] for item in focus if item.get("active")]
+end
+out
+""".strip()
+    program = parse_program(source)
+    validate_program(program)
+    runtime = BridgeRuntime(
+        name="python",
+        description="Python bridge runtime",
+        handler=lambda block, focus, policy: ["Ada"],
+        default_policy=BridgeExecutionPolicy(timeout_seconds=1.0),
+    )
+    result = run_program_text(source, env={"users": [{"name": "Ada", "active": True}]}, bridge_runtimes={"python": runtime})
+    assert result.value == ["Ada"]
+
+
 def test_extensions_list_outputs_discovered_extensions(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -266,6 +286,23 @@ def test_extensions_list_outputs_discovered_extensions(
     assert exit_code == 0
     assert "foclan-llm" in captured
     assert "llm_text" in captured
+
+
+def test_bridges_list_outputs_discovered_bridge_runtimes(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    runtime = BridgeRuntime(
+        name="python",
+        description="Python bridge runtime",
+        handler=lambda block, focus, policy: focus,
+        default_policy=BridgeExecutionPolicy(timeout_seconds=1.0),
+    )
+    monkeypatch.setattr(foclan_bridges, "list_installed_bridge_runtimes", lambda: (runtime,))
+    monkeypatch.setattr(foclan_cli, "list_installed_bridge_runtimes", lambda: (runtime,))
+    exit_code = foclan_main(["bridges", "list"])
+    captured = capsys.readouterr().out
+    assert exit_code == 0
+    assert "python" in captured
 
 
 def test_bridge_runtime_registry_loads_discovered_runtimes(monkeypatch: pytest.MonkeyPatch) -> None:

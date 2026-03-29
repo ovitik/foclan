@@ -56,6 +56,22 @@ This extension adds:
 - `http_post_json`
 - environment-backed headers such as `{"env": "API_TOKEN", "prefix": "Bearer "}`
 
+## Optional Python Bridge Runtime
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-python"
+```
+
+This package registers the first bridge runtime:
+
+- `python`
+
+Inspect it with:
+
+```bash
+foclan bridges list
+```
+
 ## Verify
 
 ```bash

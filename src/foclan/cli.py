@@ -9,6 +9,7 @@ from typing import Any
 
 from .api import parse_program, run_program_text, validate_program
 from .benchmarking import list_public_suites, run_benchmark
+from .bridges import list_installed_bridge_runtimes
 from .extensions import list_installed_extensions, load_host_functions
 from .examples import get_current_example, list_current_examples, load_example_env, load_example_source
 from .prompting import load_prompt_bundle
@@ -40,6 +41,10 @@ def main(argv: list[str] | None = None) -> int:
     extensions_parser = subparsers.add_parser("extensions", help="Inspect installed host-function extensions.")
     extensions_subparsers = extensions_parser.add_subparsers(dest="extensions_command", required=True)
     extensions_subparsers.add_parser("list", help="List installed extensions and host functions.")
+
+    bridges_parser = subparsers.add_parser("bridges", help="Inspect installed bridge runtimes.")
+    bridges_subparsers = bridges_parser.add_subparsers(dest="bridges_command", required=True)
+    bridges_subparsers.add_parser("list", help="List installed bridge runtimes.")
 
     examples_parser = subparsers.add_parser("examples", help="Work with current Foclan 1.0 examples.")
     examples_subparsers = examples_parser.add_subparsers(dest="examples_command", required=True)
@@ -121,6 +126,24 @@ def main(argv: list[str] | None = None) -> int:
                     "host_functions": sorted(extension.host_functions),
                 }
                 for extension in list_installed_extensions()
+            ]
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            return 0
+
+    if args.command == "bridges":
+        if args.bridges_command == "list":
+            payload = [
+                {
+                    "name": runtime.name,
+                    "description": runtime.description,
+                    "default_policy": {
+                        "timeout_seconds": runtime.default_policy.timeout_seconds,
+                        "allow_imports": runtime.default_policy.allow_imports,
+                        "allow_filesystem": runtime.default_policy.allow_filesystem,
+                        "allow_network": runtime.default_policy.allow_network,
+                    },
+                }
+                for runtime in list_installed_bridge_runtimes()
             ]
             print(json.dumps(payload, ensure_ascii=False, indent=2))
             return 0

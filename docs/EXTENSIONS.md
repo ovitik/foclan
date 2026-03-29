@@ -129,3 +129,5 @@ As a rule:
 - if a step is exceptional, custom, or hard to encode cleanly in Foclan, a bridge may be the better tool
 
 See also [BRIDGES.md](BRIDGES.md).
+
+Bridge runtimes follow a sibling architecture rather than being normal host-function extensions. The first public runtime package is `foclan-python`.

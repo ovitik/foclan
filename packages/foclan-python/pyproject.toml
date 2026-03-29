@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foclan-python"
+version = "1.0.0b1"
+description = "Optional Foclan bridge runtime for constrained Python transform blocks."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "foclan>=1.0.0b1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[project.entry-points."foclan.bridge_runtimes"]
+python = "foclan_python:register_bridge_runtime"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
