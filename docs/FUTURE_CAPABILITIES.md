@@ -135,13 +135,14 @@ Potential extension package:
 
 This is a strong fit because exact output contracts are already central to Foclan.
 
-### 9. `foclan-sql`
+### 9. `foclan-sql` evolution
 
-Potential extension package:
+`foclan-sql` now exists in first form. The next steps are:
 
-- deterministic SQL query and exec steps
-- SQLite and mainstream SQL backends via extension config
-- list-of-record outputs that plug back into normal Foclan transforms
+- Postgres and other mainstream SQL backends where they fit the same narrow request model
+- clearer connection presets
+- transaction helpers only if they stay simple
+- stronger documentation for SQL-first data pipelines
 
 This fits the product direction very well because SQL is already declarative, data-oriented, and familiar to LLMs.
 

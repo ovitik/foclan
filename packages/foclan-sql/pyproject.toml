@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foclan-sql"
+version = "1.0.0b1"
+description = "Optional Foclan extension for deterministic SQL query and exec steps."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "foclan>=1.0.0b1",
+  "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[project.entry-points."foclan.host_functions"]
+foclan-sql = "foclan_sql:register_host_functions"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

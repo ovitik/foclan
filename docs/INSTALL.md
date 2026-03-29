@@ -56,6 +56,18 @@ This extension adds:
 - `http_post_json`
 - environment-backed headers such as `{"env": "API_TOKEN", "prefix": "Bearer "}`
 
+## Optional SQL Extension
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-sql"
+```
+
+This extension adds:
+
+- `sql_query`
+- `sql_exec`
+- SQLite-first `path` / `dsn` / `dsn_env` connection requests
+
 ## Optional Python Bridge Runtime
 
 ```bash

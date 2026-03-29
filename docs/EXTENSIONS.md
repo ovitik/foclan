@@ -72,6 +72,20 @@ Current surface:
 - `http_post_json`
 - env-backed auth headers
 
+### `foclan-sql`
+
+Purpose:
+
+- deterministic SQL query and exec steps
+- database access that still fits a linearly shaped Foclan workflow
+- table-like data retrieval that feeds directly into exact-output transforms
+
+Current surface:
+
+- `sql_query`
+- `sql_exec`
+- SQLite-first request shape via `path`, `dsn`, or `dsn_env`
+
 ## Extension Design Rules
 
 An extension is a good fit for Foclan when it does at least one of these:

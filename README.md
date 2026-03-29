@@ -241,6 +241,12 @@ Optional HTTP extension:
 python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-http"
 ```
 
+Optional SQL extension:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-sql"
+```
+
 Optional Python bridge runtime:
 
 ```bash
@@ -448,6 +454,8 @@ Current public extensions:
   Adds deterministic local text, JSON, JSONL, and CSV file operations.
 - `foclan-http`
   Adds minimal deterministic JSON/text HTTP GET and JSON POST calls.
+- `foclan-sql`
+  Adds deterministic `sql_query` and `sql_exec` steps with a SQLite-first request shape.
 
 Current public bridge runtimes:
 
