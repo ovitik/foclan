@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .api import parse_program, run_program_text, validate_program
+from .benchmarking import list_public_suites, run_benchmark
 from .extensions import list_installed_extensions, load_host_functions
 from .examples import get_current_example, list_current_examples, load_example_env, load_example_source
 from .prompting import load_prompt_bundle
@@ -50,6 +51,27 @@ def main(argv: list[str] | None = None) -> int:
     examples_run = examples_subparsers.add_parser("run", help="Run a current example with its default env.")
     examples_run.add_argument("name")
     examples_run.add_argument("--dotenv", nargs="?", const=Path(".env"), type=Path)
+
+    benchmark_parser = subparsers.add_parser("benchmark", help="Run the public exact-output benchmark.")
+    benchmark_subparsers = benchmark_parser.add_subparsers(dest="benchmark_command", required=True)
+
+    benchmark_subparsers.add_parser("list-suites", help="List bundled public benchmark suites.")
+
+    benchmark_run = benchmark_subparsers.add_parser("run", help="Run the bundled public benchmark.")
+    benchmark_run.add_argument("--provider", choices=("openai", "anthropic", "google"), required=True)
+    benchmark_run.add_argument("--model", required=True)
+    benchmark_run.add_argument("--languages", nargs="+", default=["foclan", "python"], choices=("foclan", "python"))
+    benchmark_run.add_argument("--suite", default="main-106")
+    benchmark_run.add_argument("--difficulties", nargs="*")
+    benchmark_run.add_argument("--sample-size", type=int)
+    benchmark_run.add_argument("--seed", type=int, default=42)
+    benchmark_run.add_argument("--max-output-tokens", type=int, default=2000)
+    benchmark_run.add_argument("--reasoning-effort", default="none")
+    benchmark_run.add_argument("--anti-overthinking", action="store_true")
+    benchmark_run.add_argument("--parallelism", type=int, default=4)
+    benchmark_run.add_argument("--timeout-seconds", type=float, default=60.0)
+    benchmark_run.add_argument("--output-dir", type=Path, default=Path("benchmark-results"))
+    benchmark_run.add_argument("--dotenv", nargs="?", const=Path(".env"), type=Path)
 
     args = parser.parse_args(argv)
 
@@ -144,6 +166,46 @@ def main(argv: list[str] | None = None) -> int:
             env = load_example_env(entry)
             result = run_program_text(source, env=env, host_functions=load_host_functions())
             print(json.dumps(result.value, ensure_ascii=False, indent=2, sort_keys=True))
+            return 0
+
+    if args.command == "benchmark":
+        if args.benchmark_command == "list-suites":
+            print(json.dumps(list(list_public_suites()), ensure_ascii=False, indent=2))
+            return 0
+
+        if args.benchmark_command == "run":
+            if args.dotenv is not None:
+                _load_dotenv(args.dotenv)
+            report = run_benchmark(
+                provider=args.provider,
+                model=args.model,
+                languages=tuple(args.languages),
+                suite=args.suite,
+                difficulties=tuple(args.difficulties) if args.difficulties else None,
+                sample_size=args.sample_size,
+                seed=args.seed,
+                max_output_tokens=args.max_output_tokens,
+                reasoning_effort=args.reasoning_effort,
+                include_anti_overthinking=args.anti_overthinking,
+                parallelism=args.parallelism,
+                timeout_seconds=args.timeout_seconds,
+                output_dir=args.output_dir,
+            )
+            print(
+                json.dumps(
+                    {
+                        "suite": report["suite"],
+                        "provider": report["provider"],
+                        "model": report["model"],
+                        "reasoning_effort": report["reasoning_effort"],
+                        "overall_summary": report["overall_summary"],
+                        "json_path": report["json_path"],
+                        "markdown_path": report["markdown_path"],
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
             return 0
 
     raise AssertionError(f"Unsupported command {args.command}")

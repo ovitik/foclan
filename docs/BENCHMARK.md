@@ -87,6 +87,18 @@ This public benchmark should answer a simple practical question:
 
 ## Current Status
 
-This repository now contains the public task bundle and benchmark spec.
+This repository now contains:
 
-The next implementation step is the public runner itself.
+- the public task bundle
+- the benchmark spec
+- a first public CLI runner:
+
+```bash
+foclan benchmark list-suites
+foclan benchmark run --provider openai --model gpt-5-mini --dotenv .env
+```
+
+The canonical public comparison remains:
+
+- `foclan`
+- `python`

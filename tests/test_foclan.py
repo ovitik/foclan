@@ -2,9 +2,10 @@ from pathlib import Path
 
 import pytest
 
+import foclan.benchmarking as foclan_benchmarking
 import foclan.cli as foclan_cli
 import foclan.extensions as foclan_extensions
-from foclan import load_prompt_bundle, parse_program, run_program_text, validate_program
+from foclan import load_prompt_bundle, load_public_tasks, parse_program, run_benchmark, run_program_text, validate_program
 from foclan.cli import main as foclan_main
 from foclan.examples import list_current_examples, load_example_env, load_example_source
 from foclan.extensions import HostExtension
@@ -241,3 +242,72 @@ def test_extensions_list_outputs_discovered_extensions(
     assert exit_code == 0
     assert "foclan-llm" in captured
     assert "llm_text" in captured
+
+
+def test_public_benchmark_suite_loads() -> None:
+    tasks = load_public_tasks()
+    assert len(tasks) == 106
+    assert {task.difficulty for task in tasks} == {"easy", "medium", "hard", "brutal", "super_brutal"}
+
+
+def test_cli_benchmark_list_suites(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = foclan_main(["benchmark", "list-suites"])
+    captured = capsys.readouterr().out
+    assert exit_code == 0
+    assert "main-106" in captured
+
+
+def test_run_benchmark_with_mock_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        foclan_benchmarking,
+        "load_public_tasks",
+        lambda **kwargs: [
+            foclan_benchmarking.PublicEvalTask(
+                task_id="active-users-count",
+                title="Active Users Count",
+                description="Return the number of active users.",
+                difficulty="easy",
+                env={"users": [{"active": True}, {"active": False}, {"active": True}]},
+                expected=2,
+            )
+        ],
+    )
+
+    def fake_generate_code(**kwargs):
+        language = "python" if "Python" in kwargs["system_prompt"] else "foclan"
+        if language == "python":
+            text = "def solve(inputs):\n    return sum(1 for user in inputs['users'] if user.get('active'))\n"
+        else:
+            text = "in users\nkeep active\ncount\nout\n"
+        return foclan_benchmarking.GeneratedResponse(
+            text=text,
+            usage=foclan_benchmarking.ProviderUsage(
+                input_tokens=10,
+                cached_tokens=0,
+                output_tokens=20,
+                reasoning_tokens=0,
+                total_tokens=30,
+                resolved_model="mock-model",
+            ),
+        )
+
+    monkeypatch.setattr(foclan_benchmarking, "_generate_code", fake_generate_code)
+    report = run_benchmark(
+        provider="openai",
+        model="mock-model",
+        languages=("foclan", "python"),
+        suite="main-106",
+        difficulties=("easy",),
+        sample_size=None,
+        seed=1,
+        max_output_tokens=200,
+        reasoning_effort="none",
+        include_anti_overthinking=False,
+        parallelism=1,
+        timeout_seconds=1.0,
+        output_dir=tmp_path,
+    )
+    assert len(report["overall_summary"]) == 2
+    assert tmp_path.exists()
+    assert Path(report["json_path"]).exists()
+    assert Path(report["markdown_path"]).exists()

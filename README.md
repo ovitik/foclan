@@ -195,6 +195,37 @@ Notes:
 - `openai_json_extract` and `openai_text_summary` require `foclan-llm`
 - for text calls, do not starve `max_output_tokens`; modern provider APIs may spend part of the budget on reasoning before final text
 
+## Public Benchmark
+
+Foclan now ships with a bundled public exact-output benchmark suite.
+
+List the bundled suites:
+
+```bash
+foclan benchmark list-suites
+```
+
+Run a sampled benchmark against the default Python baseline:
+
+```bash
+foclan benchmark run \
+  --provider openai \
+  --model gpt-5-mini \
+  --languages foclan python \
+  --difficulties hard brutal super_brutal \
+  --sample-size 20 \
+  --seed 42 \
+  --reasoning-effort none \
+  --dotenv .env
+```
+
+The runner writes both JSON and Markdown reports.
+
+Install note:
+
+- benchmark runs need HTTP client + `.env` support
+- easiest path is either `foclan-llm` or `foclan[benchmark]`
+
 ## Scaffold Editor Integration
 
 In a target project where you want an LLM to write Foclan:
