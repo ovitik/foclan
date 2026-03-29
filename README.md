@@ -112,6 +112,12 @@ Install directly from GitHub:
 python -m pip install "git+https://github.com/ovitik/foclan.git"
 ```
 
+Optional LLM extension:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-llm"
+```
+
 ## Quickstart
 
 ```bash
@@ -125,6 +131,41 @@ Render the packaged prompt bundle:
 ```bash
 foclan prompt
 foclan prompt --anti-overthinking
+```
+
+## Optional LLM Extension
+
+The core package stays general and elegant. Provider-specific functionality lives in the optional `foclan-llm` package.
+
+`foclan-llm` adds:
+
+- `.env` loading through `foclan run --dotenv`
+- `call llm_text`
+- `call llm_json`
+- support for:
+  - OpenAI Responses API
+  - Anthropic Messages API
+  - Google Gemini `generateContent` API
+
+The extension is intentionally built on the current mainstream provider APIs rather than older legacy endpoints.
+
+Install path:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git"
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-llm"
+```
+
+Inspect installed extensions:
+
+```bash
+foclan extensions list
+```
+
+Typical run:
+
+```bash
+foclan run programs/summarize.focus --env inputs.json --dotenv .env
 ```
 
 ## Scaffold Editor Integration

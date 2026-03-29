@@ -2,9 +2,12 @@ from pathlib import Path
 
 import pytest
 
+import foclan.cli as foclan_cli
+import foclan.extensions as foclan_extensions
 from foclan import load_prompt_bundle, parse_program, run_program_text, validate_program
 from foclan.cli import main as foclan_main
 from foclan.examples import list_current_examples, load_example_env, load_example_source
+from foclan.extensions import HostExtension
 from foclan.scaffolding import write_scaffold
 
 
@@ -159,3 +162,20 @@ def test_cli_accepts_utf8_bom_program_and_env(tmp_path: Path, capsys: pytest.Cap
     captured = capsys.readouterr().out
     assert exit_code == 0
     assert '"active_users": 2' in captured
+
+
+def test_extensions_list_outputs_discovered_extensions(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    extension = HostExtension(
+        name="foclan-llm",
+        description="LLM provider calls",
+        host_functions={"llm_text": lambda focus: focus},
+    )
+    monkeypatch.setattr(foclan_extensions, "list_installed_extensions", lambda: (extension,))
+    monkeypatch.setattr(foclan_cli, "list_installed_extensions", lambda: (extension,))
+    exit_code = foclan_main(["extensions", "list"])
+    captured = capsys.readouterr().out
+    assert exit_code == 0
+    assert "foclan-llm" in captured
+    assert "llm_text" in captured

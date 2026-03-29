@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .api import parse_program, run_program_text, validate_program
+from .extensions import list_installed_extensions, load_host_functions
 from .examples import get_current_example, list_current_examples, load_example_env, load_example_source
 from .prompting import load_prompt_bundle
 from .scaffolding import write_scaffold
@@ -18,6 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     run_parser = subparsers.add_parser("run", help="Run a Foclan 1.0 program.")
     run_parser.add_argument("program", type=Path)
     run_parser.add_argument("--env", required=True, type=Path)
+    run_parser.add_argument("--dotenv", nargs="?", const=Path(".env"), type=Path)
 
     validate_parser = subparsers.add_parser("validate", help="Validate a Foclan 1.0 program.")
     validate_parser.add_argument("program", type=Path)
@@ -31,6 +33,10 @@ def main(argv: list[str] | None = None) -> int:
     init_parser.add_argument("target", choices=("codex", "cursor", "all"))
     init_parser.add_argument("--project-dir", type=Path, default=Path.cwd())
     init_parser.add_argument("--force", action="store_true")
+
+    extensions_parser = subparsers.add_parser("extensions", help="Inspect installed host-function extensions.")
+    extensions_subparsers = extensions_parser.add_subparsers(dest="extensions_command", required=True)
+    extensions_subparsers.add_parser("list", help="List installed extensions and host functions.")
 
     examples_parser = subparsers.add_parser("examples", help="Work with current Foclan 1.0 examples.")
     examples_subparsers = examples_parser.add_subparsers(dest="examples_command", required=True)
@@ -46,9 +52,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "run":
+        if args.dotenv is not None:
+            _load_dotenv(args.dotenv)
         env = _load_json(args.env)
         source = _read_text(args.program)
-        result = run_program_text(source, env=env)
+        result = run_program_text(source, env=env, host_functions=load_host_functions())
         print(json.dumps(result.value, ensure_ascii=False, indent=2, sort_keys=True))
         return 0
 
@@ -78,6 +86,19 @@ def main(argv: list[str] | None = None) -> int:
         payload = {"project_dir": str(args.project_dir), "written": [str(path) for path in written]}
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
+
+    if args.command == "extensions":
+        if args.extensions_command == "list":
+            payload = [
+                {
+                    "name": extension.name,
+                    "description": extension.description,
+                    "host_functions": sorted(extension.host_functions),
+                }
+                for extension in list_installed_extensions()
+            ]
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            return 0
 
     if args.command == "examples":
         if args.examples_command == "list":
@@ -124,3 +145,15 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig")
+
+
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        raise FileNotFoundError(f"{path} does not exist.")
+    try:
+        from dotenv import load_dotenv
+    except ImportError as exc:
+        raise RuntimeError(
+            "Loading .env files requires python-dotenv. Install foclan-llm or python-dotenv."
+        ) from exc
+    load_dotenv(path, override=False)

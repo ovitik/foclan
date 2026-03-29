@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foclan-llm"
+version = "1.0.0b1"
+description = "Optional Foclan extension for .env-backed OpenAI, Anthropic, and Google Gemini API calls."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "foclan>=1.0.0b1",
+  "httpx>=0.28.1",
+  "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[project.entry-points."foclan.host_functions"]
+foclan-llm = "foclan_llm:register_host_functions"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

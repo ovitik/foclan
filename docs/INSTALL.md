@@ -12,6 +12,21 @@ python -m pip install -e .[test]
 python -m pip install "git+https://github.com/ovitik/foclan.git"
 ```
 
+## Optional LLM Extension
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-llm"
+```
+
+This extension adds:
+
+- `.env` loading
+- `llm_text`
+- `llm_json`
+- OpenAI Responses API
+- Anthropic Messages API
+- Google Gemini `generateContent`
+
 ## Verify
 
 ```bash
@@ -25,6 +40,7 @@ foclan examples run counts_dashboard
 ```bash
 foclan prompt
 foclan prompt --anti-overthinking
+foclan extensions list
 ```
 
 ## Project Scaffolding

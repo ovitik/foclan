@@ -1,0 +1,9 @@
+{
+  "request": {
+    "provider": "openai",
+    "model": "gpt-5-mini",
+    "system": "Summarize the text in one sentence.",
+    "input": "Foclan is a compact LLM-first language for precise data transformation.",
+    "max_output_tokens": 120
+  }
+}

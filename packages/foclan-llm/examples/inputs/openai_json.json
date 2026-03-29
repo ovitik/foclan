@@ -1,0 +1,19 @@
+{
+  "request": {
+    "provider": "openai",
+    "model": "gpt-5-mini",
+    "system": "Extract a person object.",
+    "input": "Jane is 54 years old and lives in Prague.",
+    "max_output_tokens": 160,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "age": {"type": "number"},
+        "city": {"type": "string"}
+      },
+      "required": ["name", "age", "city"],
+      "additionalProperties": false
+    }
+  }
+}
