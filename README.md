@@ -197,6 +197,18 @@ Optional LLM extension:
 python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-llm"
 ```
 
+Optional local I/O extension:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-io"
+```
+
+Optional HTTP extension:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-http"
+```
+
 ## Quickstart
 
 ```bash
@@ -273,6 +285,92 @@ Notes:
 
 - `openai_json_extract` and `openai_text_summary` require `foclan-llm`
 - for text calls, do not starve `max_output_tokens`; modern provider APIs may spend part of the budget on reasoning before final text
+
+## Optional I/O Extension
+
+`foclan-io` adds small deterministic file I/O helpers without changing the language core.
+
+It currently provides:
+
+- `read_text`
+- `write_text`
+- `read_json`
+- `write_json`
+- `read_jsonl`
+- `read_csv`
+- `write_csv`
+
+Install path:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-io"
+```
+
+Typical use:
+
+```text
+in request
+call read_json
+out
+```
+
+or:
+
+```text
+in request
+call write_csv
+out
+```
+
+The host function request is just normal data. For example:
+
+```json
+{
+  "request": {
+    "path": "outputs/report.json",
+    "content": {"ok": true}
+  }
+}
+```
+
+## Optional HTTP Extension
+
+`foclan-http` adds a very small deterministic HTTP layer as an extension, not as core syntax.
+
+It currently provides:
+
+- `http_get_json`
+- `http_get_text`
+- `http_post_json`
+
+Install path:
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-http"
+```
+
+Typical use:
+
+```text
+in request
+call http_get_json
+out
+```
+
+Headers can be passed directly or backed by environment variables:
+
+```json
+{
+  "request": {
+    "url": "https://api.example.com/items",
+    "headers": {
+      "Authorization": {"env": "API_TOKEN", "prefix": "Bearer "}
+    }
+  }
+}
+```
+
+This keeps secrets in `.env` and out of the `.focus` program itself.
 
 ## Public Benchmark
 

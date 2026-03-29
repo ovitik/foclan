@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -231,7 +232,8 @@ def _load_dotenv(path: Path) -> None:
         raise RuntimeError(
             "Loading .env files requires python-dotenv. Install foclan-llm or python-dotenv."
         ) from exc
-    load_dotenv(path, override=False)
+    text = path.read_text(encoding="utf-8-sig")
+    load_dotenv(stream=StringIO(text), override=False)
 
 
 def _safe_print(text: str) -> None:

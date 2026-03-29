@@ -1,4 +1,6 @@
 from pathlib import Path
+import sys
+import types
 
 import pytest
 
@@ -110,6 +112,26 @@ def test_cli_examples_run_accepts_dotenv(
     capsys.readouterr()
     assert exit_code == 0
     assert loaded == [dotenv_path]
+
+
+def test_load_dotenv_accepts_utf8_bom(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dotenv_path = tmp_path / ".env"
+    dotenv_path.write_text("TEST_TOKEN=abc123\n", encoding="utf-8-sig")
+    loaded: dict[str, str] = {}
+
+    def fake_load_dotenv(*, stream, override: bool) -> None:
+        loaded["text"] = stream.read()
+        loaded["override"] = override
+
+    fake_module = types.SimpleNamespace(load_dotenv=fake_load_dotenv)
+    monkeypatch.setitem(sys.modules, "dotenv", fake_module)
+    foclan_cli._load_dotenv(dotenv_path)
+
+    assert loaded["text"] == "TEST_TOKEN=abc123\n"
+    assert loaded["override"] is False
 
 
 def test_cli_examples_run_llm_example_requires_extension(

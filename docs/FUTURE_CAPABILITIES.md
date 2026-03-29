@@ -101,24 +101,25 @@ Good next additions:
 - clearer token-limit diagnostics
 - optional retry with the same request payload
 
-### 6. `foclan-io`
+### 6. `foclan-io` evolution
 
-Potential extension package:
+`foclan-io` now exists in first form. The next steps are:
 
-- CSV input/output
-- JSONL input/output
 - directory batch processing
 - stdin/stdout helpers
+- better CSV typing conventions
+- path convenience helpers that still keep the core language clean
 
-This would make Foclan much more useful in data and automation pipelines without changing the language core.
+This is valuable because it makes Foclan much more useful in data and automation pipelines without changing the language core.
 
-### 7. `foclan-http`
+### 7. `foclan-http` evolution
 
-Potential extension package:
+`foclan-http` now exists in first form. The next steps are:
 
-- minimal deterministic HTTP GET/POST helpers
-- request shaping in Foclan
-- response shaping in Foclan
+- deterministic HTTP PUT/PATCH/DELETE helpers where clearly useful
+- clearer retry and timeout diagnostics
+- better response error shaping
+- safer convenience around auth headers and common JSON APIs
 
 This should remain an extension, not core syntax.
 

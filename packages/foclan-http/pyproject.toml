@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foclan-http"
+version = "1.0.0b1"
+description = "Optional Foclan extension for simple deterministic HTTP calls."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "foclan>=1.0.0b1",
+  "httpx>=0.28.1",
+  "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+]
+
+[project.entry-points."foclan.host_functions"]
+foclan-http = "foclan_http:register_host_functions"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

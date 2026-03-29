@@ -27,12 +27,42 @@ This extension adds:
 - Anthropic Messages API
 - Google Gemini `generateContent`
 
+## Optional I/O Extension
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-io"
+```
+
+This extension adds:
+
+- `read_text`
+- `write_text`
+- `read_json`
+- `write_json`
+- `read_jsonl`
+- `read_csv`
+- `write_csv`
+
+## Optional HTTP Extension
+
+```bash
+python -m pip install "git+https://github.com/ovitik/foclan.git#subdirectory=packages/foclan-http"
+```
+
+This extension adds:
+
+- `http_get_json`
+- `http_get_text`
+- `http_post_json`
+- environment-backed headers such as `{"env": "API_TOKEN", "prefix": "Bearer "}`
+
 ## Verify
 
 ```bash
 foclan examples list
 foclan examples validate
 foclan examples run counts_dashboard
+foclan extensions list
 ```
 
 ## Prompt Bundle
@@ -40,7 +70,6 @@ foclan examples run counts_dashboard
 ```bash
 foclan prompt
 foclan prompt --anti-overthinking
-foclan extensions list
 ```
 
 ## Project Scaffolding
