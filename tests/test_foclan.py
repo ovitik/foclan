@@ -251,6 +251,28 @@ out
     validate_program(program)
 
 
+def test_count_rows_and_sort_desc_are_allowed_in_product_subset() -> None:
+    source = """
+in orders
+count_rows status
+sort_desc count
+out
+""".strip()
+    program = parse_program(source)
+    validate_program(program)
+
+
+def test_count_map_is_allowed_in_product_subset() -> None:
+    source = """
+in tickets
+where_eq status "open"
+count_map priority
+out
+""".strip()
+    program = parse_program(source)
+    validate_program(program)
+
+
 def test_bridge_is_allowed_in_product_subset_and_runs() -> None:
     source = """
 in users

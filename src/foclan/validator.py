@@ -273,13 +273,19 @@ def _next_shape_for_step(current_shape: str, statement: Step) -> str:
     if op == "count_by":
         _ensure_shape(line_no, op, current_shape, {SHAPE_LIST_RECORDS})
         return SHAPE_LIST_RECORDS
+    if op == "count_rows":
+        _ensure_shape(line_no, op, current_shape, {SHAPE_LIST_RECORDS})
+        return SHAPE_LIST_RECORDS
+    if op == "count_map":
+        _ensure_shape(line_no, op, current_shape, {SHAPE_LIST_RECORDS})
+        return SHAPE_RECORD
     if op in {"top", "argmax", "argmin"}:
         _ensure_shape(line_no, op, current_shape, {SHAPE_LIST_RECORDS, SHAPE_GROUPED_LIST, SHAPE_LIST_ANY})
         return SHAPE_RECORD
     if op == "most_common":
         _ensure_shape(line_no, op, current_shape, {SHAPE_LIST_RECORDS, SHAPE_GROUPED_LIST, SHAPE_LIST_ANY})
         return SHAPE_SCALAR
-    if op == "sort":
+    if op in {"sort", "sort_desc"}:
         allowed = {SHAPE_LIST_RECORDS, SHAPE_GROUPED_LIST, SHAPE_LIST_ANY}
         if not statement.args:
             allowed |= {SHAPE_LIST_SCALAR}

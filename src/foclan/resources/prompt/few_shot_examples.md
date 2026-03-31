@@ -126,7 +126,29 @@ argmax total
 end
 ```
 
-## Example 6: Request payload assembly
+## Example 6: Open ticket summary object
+
+What it does: returns a compact object that maps open-ticket priorities to counts.
+
+```text
+in tickets
+where_eq status "open"
+count_map priority
+out
+```
+
+## Example 7: Status counts sorted descending
+
+What it does: returns compact `{status, count}` rows sorted from highest count to lowest.
+
+```text
+in orders
+count_rows status
+sort_desc count
+out
+```
+
+## Example 8: Request payload assembly
 
 What it does: builds a simple provider payload object without making the API call itself.
 
@@ -148,7 +170,7 @@ in question
 end
 ```
 
-## Example 7: Live JSON extraction
+## Example 9: Live JSON extraction
 
 What it does: builds one request object and sends it to `llm_json`.
 

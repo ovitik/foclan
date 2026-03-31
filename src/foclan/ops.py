@@ -42,11 +42,14 @@ BUILTIN_SPECS: dict[str, BuiltinSpec] = {
     "group": BuiltinSpec(1, 1),
     "count": BuiltinSpec(0, 0),
     "count_by": BuiltinSpec(1, 1),
+    "count_rows": BuiltinSpec(1, 1),
+    "count_map": BuiltinSpec(1, 1),
     "top": BuiltinSpec(1, 1),
     "argmax": BuiltinSpec(1, 1),
     "argmin": BuiltinSpec(1, 1),
     "most_common": BuiltinSpec(1, 1),
     "sort": BuiltinSpec(0, 1),
+    "sort_desc": BuiltinSpec(0, 1),
     "take": BuiltinSpec(1, 1),
     "flat": BuiltinSpec(0, 0),
     "uniq": BuiltinSpec(0, 0),
@@ -133,6 +136,10 @@ def apply_builtin(
         return _count(focus)
     if op == "count_by":
         return _count(_group_by(_require_record_list(focus, "count_by"), args[0]))
+    if op == "count_rows":
+        return _count_rows(_require_record_list(focus, "count_rows"), args[0])
+    if op == "count_map":
+        return _count_map(_require_record_list(focus, "count_map"), args[0])
     if op == "top":
         field = args[0]
         items = _require_list(focus, "top")
@@ -162,7 +169,31 @@ def apply_builtin(
         if args and items and all(isinstance(item, dict) for item in items):
             field = args[0]
             return sorted(items, key=lambda item: _sort_key(item, field))
+        if items and all(isinstance(item, dict) for item in items):
+            if all("count" in item for item in items):
+                return sorted(
+                    items,
+                    key=lambda item: (-int(item.get("count", 0)), json.dumps(item, sort_keys=True, ensure_ascii=False)),
+                )
+            return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))
         return sorted(items)
+    if op == "sort_desc":
+        items = _require_list(focus, "sort_desc")
+        if args and items and all(isinstance(item, dict) for item in items):
+            field = args[0]
+            return sorted(
+                items,
+                key=lambda item: (_sort_key(item, field), json.dumps(item, sort_keys=True, ensure_ascii=False)),
+                reverse=True,
+            )
+        if items and all(isinstance(item, dict) for item in items):
+            if all("count" in item for item in items):
+                return sorted(
+                    items,
+                    key=lambda item: (-int(item.get("count", 0)), json.dumps(item, sort_keys=True, ensure_ascii=False)),
+                )
+            return list(reversed(sorted(items, key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))))
+        return sorted(items, reverse=True)
     if op == "take":
         count = parse_literal(args[0])
         if not isinstance(count, int):
@@ -306,6 +337,22 @@ def _count(focus: Any) -> Any:
     raise FocusTypeError("count expects a list or a grouped record.")
 
 
+def _count_rows(items: list[dict[str, Any]], field: str) -> list[dict[str, Any]]:
+    counts: dict[Any, int] = {}
+    for item in items:
+        key = item.get(field)
+        counts[key] = counts.get(key, 0) + 1
+    return [{field: key, "count": count} for key, count in counts.items()]
+
+
+def _count_map(items: list[dict[str, Any]], field: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for item in items:
+        key = _object_key(item.get(field))
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
 def _sort_key(item: Any, field: str) -> Any:
     if not isinstance(item, dict):
         raise FocusTypeError("top/sort with a field expect record items.")
@@ -318,3 +365,11 @@ def _get(focus: Any, key: Any) -> Any:
     if isinstance(focus, list) and isinstance(key, int):
         return focus[key]
     raise FocusTypeError("get expects a record focus or a list index.")
+
+
+def _object_key(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    if value is None:
+        return "null"
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, default=repr)

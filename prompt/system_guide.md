@@ -35,8 +35,11 @@ Default builtins:
 - `group`
 - `count`
 - `count_by`
+- `count_rows`
+- `count_map`
 - `top`
 - `sort`
+- `sort_desc`
 - `take`
 - `uniq`
 - `keys`
@@ -70,6 +73,9 @@ Advanced builtins and forms:
 - Do not add wrapper keys.
 - Do not rename keys unless the task explicitly requires aliasing.
 - Prefer direct root keys and short valid programs.
+- Use `count_map <field>` when the task asks for an object that maps values to counts.
+- Use `count_rows <field>` when the task asks for compact rows like `{status, count}` without grouped `items`.
+- Use `count_by <field>` only when grouped records with `items` are actually desired.
 
 ## Default style
 
