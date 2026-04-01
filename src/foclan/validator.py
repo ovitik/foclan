@@ -314,6 +314,8 @@ def _next_shape_for_step(current_shape: str, statement: Step) -> str:
         return SHAPE_TEXT
     if op == "call":
         return SHAPE_UNKNOWN
+    if op in {"python", "python_from", "sql", "sql_from"}:
+        return SHAPE_UNKNOWN
 
     return SHAPE_UNKNOWN
 

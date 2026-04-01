@@ -14,6 +14,7 @@ SUPPORTED_DEFAULT_OPS = {
     "out",
     "fork",
     "branch",
+    "let",
     "end",
     "pack",
     "append",
@@ -42,6 +43,9 @@ SUPPORTED_DEFAULT_OPS = {
     "most_common",
     "const",
     "call",
+    "return",
+    "sql",
+    "python",
     "bridge",
 }
 
@@ -86,9 +90,21 @@ def run_program_text(
 
 def _enforce_v1_subset(source: str) -> None:
     in_bridge = False
+    inside_python_block = False
+    inside_sql_block = False
     for line_no, raw_line in enumerate(source.splitlines(), start=1):
         line = raw_line.lstrip("\ufeff").split("#", 1)[0].strip()
         if not line:
+            continue
+
+        if inside_python_block:
+            if line == "endpython":
+                inside_python_block = False
+            continue
+
+        if inside_sql_block:
+            if line == "endsql":
+                inside_sql_block = False
             continue
 
         if in_bridge:
@@ -103,7 +119,13 @@ def _enforce_v1_subset(source: str) -> None:
                 raise ValueError(f"Line {line_no}: label must be followed by an instruction.")
 
         op = tokens[0]
-        if op in {"branch", "end", "out"}:
+        if op in {"branch", "let", "end", "out"}:
+            continue
+        if op == "python":
+            inside_python_block = True
+            continue
+        if op == "sql":
+            inside_sql_block = True
             continue
         if op == "bridge":
             if len(tokens) != 2:
@@ -119,3 +141,7 @@ def _enforce_v1_subset(source: str) -> None:
             raise ValueError(f"Line {line_no}: op '{op}' is outside the Foclan 1.0 product subset.")
     if in_bridge:
         raise ValueError("bridge block is missing a closing end.")
+    if inside_python_block:
+        raise ValueError("python block is missing a closing endpython.")
+    if inside_sql_block:
+        raise ValueError("sql block is missing a closing endsql.")

@@ -16,21 +16,19 @@ out
 What it does: returns `{active_users, paid_orders}` directly at root.
 
 ```text
-fork d1 active_users paid_orders
-pack active_users paid_orders
-out
-
-branch active_users
+let active_users
 in users
 keep active
 count
 end
 
-branch paid_orders
+let paid_orders
 in orders
 keep paid
 count
 end
+
+return active_users paid_orders
 ```
 
 ## Example 3: Exact nested output
@@ -111,19 +109,17 @@ end
 What it does: returns exact root keys even when the inner branch names are shorter.
 
 ```text
-fork d1 user order
-pack top_user=user top_order=order
-out
-
-branch user
+let user
 in users
 argmax score
 end
 
-branch order
+let order
 in orders
 argmax total
 end
+
+return top_user=user top_order=order
 ```
 
 ## Example 6: Open ticket summary object
@@ -153,21 +149,19 @@ out
 What it does: builds a simple provider payload object without making the API call itself.
 
 ```text
-fork d1 provider model prompt
-pack provider model prompt
-out
-
-branch provider
+let provider
 const "openai"
 end
 
-branch model
+let model
 const "gpt-5.4"
 end
 
-branch prompt
+let prompt
 in question
 end
+
+return provider model prompt
 ```
 
 ## Example 9: Live JSON extraction
@@ -175,32 +169,31 @@ end
 What it does: builds one request object and sends it to `llm_json`.
 
 ```text
-fork d1 provider model system input schema max_output_tokens
-pack provider=provider model=model system=system input=input schema=schema max_output_tokens=max_output_tokens
-call llm_json
-out
-
-branch provider
+let provider
 const "openai"
 end
 
-branch model
+let model
 const "gpt-5-mini"
 end
 
-branch system
+let system
 const "Extract a compact person record."
 end
 
-branch input
+let input
 in raw_text
 end
 
-branch schema
+let schema
 in schema
 end
 
-branch max_output_tokens
+let max_output_tokens
 const 200
 end
+
+return provider model system input schema max_output_tokens
+call llm_json
+out
 ```

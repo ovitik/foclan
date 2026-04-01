@@ -35,7 +35,7 @@ class _Parser:
         self.pending_branches: set[str] = set()
 
     def parse(self) -> Program:
-        main_flow, stop_token, stop_line_no = self._parse_flow(scope=(), stop_tokens=None)
+        main_flow, stop_token, stop_line_no = self._parse_flow(scope=(), stop_tokens=None, branch_depth=0)
         if stop_token:
             raise ParseError(f"Line {stop_line_no}: unexpected {stop_token}.")
         resolved_main_flow, resolved_branches = _resolve_program_references(tuple(main_flow), self.branches)
@@ -45,6 +45,7 @@ class _Parser:
         self,
         scope: tuple[str, ...],
         stop_tokens: set[str] | None,
+        branch_depth: int,
     ) -> tuple[list[StatementT], str | None, int | None]:
         flow: list[StatementT] = []
 
@@ -55,18 +56,28 @@ class _Parser:
                 self.index += 1
                 continue
 
-            tokens = line.split()
+            _, tokens = _split_labeled_tokens(line_no, line)
             op = tokens[0]
 
             if stop_tokens and op in stop_tokens:
                 self.index += 1
                 return flow, op, line_no
 
-            if op in {"end", "endns"}:
+            if op in {"end", "endns", "endsql", "endpython"}:
                 raise ParseError(f"Line {line_no}: unexpected {op}.")
 
-            if op == "branch":
-                self._parse_branch(tokens, line_no, scope)
+            if _is_python_block_start(line):
+                statement = self._parse_python_block_statement(line_no=line_no)
+                flow.append(statement)
+                continue
+
+            if _is_sql_block_start(line):
+                statement = self._parse_sql_block_statement(line_no=line_no)
+                flow.append(statement)
+                continue
+
+            if op in {"branch", "let"}:
+                self._parse_branch(tokens, line_no, scope, parent_branch_depth=branch_depth)
                 continue
 
             if op == "bridge":
@@ -78,10 +89,19 @@ class _Parser:
                     raise ParseError(f"Line {line_no}: namespace requires exactly one name.")
                 namespace_parts = tuple(_normalize_name(tokens[1]).split("."))
                 self.index += 1
-                inner_flow, stop_token, _ = self._parse_flow(scope + namespace_parts, {"endns", "end"})
+                inner_flow, stop_token, _ = self._parse_flow(
+                    scope + namespace_parts,
+                    {"endns", "end"},
+                    branch_depth=branch_depth,
+                )
                 if stop_token not in {"endns", "end"}:
                     raise ParseError(f"Line {line_no}: namespace '{tokens[1]}' is missing a closing end.")
                 flow.extend(inner_flow)
+                continue
+
+            if op == "return":
+                flow.extend(self._parse_return_statement(line=line, line_no=line_no, scope=scope, branch_depth=branch_depth))
+                self.index += 1
                 continue
 
             statement = _parse_statement(line=line, line_no=line_no, scope=scope)
@@ -92,7 +112,14 @@ class _Parser:
 
         return flow, None, None
 
-    def _parse_branch(self, tokens: list[str], line_no: int, scope: tuple[str, ...]) -> None:
+    def _parse_branch(
+        self,
+        tokens: list[str],
+        line_no: int,
+        scope: tuple[str, ...],
+        *,
+        parent_branch_depth: int,
+    ) -> None:
         if len(tokens) != 2:
             raise ParseError(f"Line {line_no}: branch requires exactly one name.")
         branch_name = self._infer_branch_definition_name(tokens[1], scope)
@@ -102,7 +129,11 @@ class _Parser:
 
         self.index += 1
         branch_scope = tuple(branch_name.split("."))
-        branch_flow, stop_token, _ = self._parse_flow(scope=branch_scope, stop_tokens={"end"})
+        branch_flow, stop_token, _ = self._parse_flow(
+            scope=branch_scope,
+            stop_tokens={"end"},
+            branch_depth=parent_branch_depth + 1,
+        )
         if stop_token != "end":
             raise ParseError(f"Line {line_no}: branch '{branch_name}' is missing a closing end.")
 
@@ -129,6 +160,92 @@ class _Parser:
             self.index += 1
 
         raise ParseError(f"Line {line_no}: bridge '{runtime}' is missing a closing end.")
+
+    def _parse_python_block_statement(self, *, line_no: int) -> StatementT:
+        line = _normalize_line(self.raw_lines[self.index])
+        label, tokens = _split_labeled_tokens(line_no, line)
+        from_names: tuple[str, ...] = ()
+        if tokens == ["python"]:
+            pass
+        elif len(tokens) >= 3 and tokens[0] == "python" and tokens[1] == "from":
+            from_names = tuple(tokens[2:])
+        else:
+            raise ParseError(f"Line {line_no}: python block start must be 'python' or 'python from <name...>'.")
+
+        self.index += 1
+        block_lines: list[str] = []
+        while self.index < len(self.raw_lines):
+            raw_line = self.raw_lines[self.index]
+            normalized = _normalize_line(raw_line)
+            if normalized == "endpython":
+                self.index += 1
+                code = "\n".join(block_lines).rstrip()
+                if from_names:
+                    return Step(label=label, line_no=line_no, op="python_from", args=(*from_names, code))
+                return Step(label=label, line_no=line_no, op="python", args=(code,))
+            block_lines.append(raw_line)
+            self.index += 1
+
+        raise ParseError(f"Line {line_no}: python block is missing a closing endpython.")
+
+    def _parse_sql_block_statement(self, *, line_no: int) -> StatementT:
+        line = _normalize_line(self.raw_lines[self.index])
+        label, tokens = _split_labeled_tokens(line_no, line)
+        from_names: tuple[str, ...] = ()
+        if tokens == ["sql"]:
+            pass
+        elif len(tokens) >= 3 and tokens[0] == "sql" and tokens[1] == "from":
+            from_names = tuple(tokens[2:])
+        else:
+            raise ParseError(f"Line {line_no}: sql block start must be 'sql' or 'sql from <name...>'.")
+
+        self.index += 1
+        block_lines: list[str] = []
+        while self.index < len(self.raw_lines):
+            raw_line = self.raw_lines[self.index]
+            normalized = _normalize_line(raw_line)
+            if normalized == "endsql":
+                self.index += 1
+                query = "\n".join(block_lines).strip()
+                if not query:
+                    raise ParseError(f"Line {line_no}: sql block must not be empty.")
+                if from_names:
+                    return Step(label=label, line_no=line_no, op="sql_from", args=(*from_names, query))
+                return Step(label=label, line_no=line_no, op="sql", args=(query,))
+            block_lines.append(raw_line)
+            self.index += 1
+
+        raise ParseError(f"Line {line_no}: sql block is missing a closing endsql.")
+
+    def _parse_return_statement(
+        self,
+        *,
+        line: str,
+        line_no: int,
+        scope: tuple[str, ...],
+        branch_depth: int,
+    ) -> list[StatementT]:
+        label, tokens = _split_labeled_tokens(line_no, line)
+        if not tokens or tokens[0] != "return":
+            raise ParseError(f"Line {line_no}: invalid return statement.")
+        if len(tokens) == 1:
+            return [Out(label=label, line_no=line_no)]
+        merge = _build_merge(
+            label=None,
+            line_no=line_no,
+            mode="pack",
+            branch_tokens=tuple(tokens[1:]),
+            scope=scope,
+        )
+        fork = Fork(
+            label=None,
+            line_no=line_no,
+            depth=branch_depth + 1,
+            raw_depth=f"d{branch_depth + 1}",
+            branch_names=merge.branch_names,
+        )
+        self.pending_branches.update(fork.branch_names)
+        return [fork, merge, Out(label=label, line_no=line_no)]
 
     def _infer_branch_definition_name(self, token: str, scope: tuple[str, ...]) -> str:
         normalized = _normalize_name(token)
@@ -158,7 +275,7 @@ def _normalize_line(line: str) -> str:
     return line.split("#", 1)[0].strip()
 
 
-def _parse_statement(line: str, line_no: int, scope: tuple[str, ...]) -> StatementT:
+def _split_labeled_tokens(line_no: int, line: str) -> tuple[str | None, list[str]]:
     tokens = line.split()
     label: str | None = None
     if tokens and tokens[0].startswith("@"):
@@ -168,6 +285,11 @@ def _parse_statement(line: str, line_no: int, scope: tuple[str, ...]) -> Stateme
         tokens = tokens[1:]
         if not tokens:
             raise ParseError(f"Line {line_no}: label must be followed by an instruction.")
+    return label, tokens
+
+
+def _parse_statement(line: str, line_no: int, scope: tuple[str, ...]) -> StatementT:
+    label, tokens = _split_labeled_tokens(line_no, line)
 
     op = tokens[0]
     args = tuple(tokens[1:])
@@ -265,7 +387,7 @@ def _parse_statement(line: str, line_no: int, scope: tuple[str, ...]) -> Stateme
             raise ParseError(f"Line {line_no}: back requires exactly one target label.")
         return Back(label=label, line_no=line_no, target_label=args[0])
 
-    if op in {"branch", "end", "namespace", "endns", "bridge"}:
+    if op in {"branch", "let", "end", "namespace", "endns", "bridge", "endpython", "sql", "endsql", "return"}:
         raise ParseError(f"Line {line_no}: unexpected '{op}'.")
 
     return Step(label=label, line_no=line_no, op=op, args=args)
@@ -356,7 +478,27 @@ def _repair_candidates(source: str, error: ParseError) -> list[str]:
         candidates.append(source.rstrip() + "\nendns\n")
     if "missing a closing end." in text:
         candidates.append(source.rstrip() + "\nend\n")
+    if "missing a closing endpython." in text:
+        candidates.append(source.rstrip() + "\nendpython\n")
+    if "missing a closing endsql." in text:
+        candidates.append(source.rstrip() + "\nendsql\n")
     return candidates
+
+
+def _is_python_block_start(line: str) -> bool:
+    try:
+        _, tokens = _split_labeled_tokens(0, line)
+    except ParseError:
+        return False
+    return tokens == ["python"] or (len(tokens) >= 3 and tokens[0] == "python" and tokens[1] == "from")
+
+
+def _is_sql_block_start(line: str) -> bool:
+    try:
+        _, tokens = _split_labeled_tokens(0, line)
+    except ParseError:
+        return False
+    return tokens == ["sql"] or (len(tokens) >= 3 and tokens[0] == "sql" and tokens[1] == "from")
 
 
 def _resolve_program_references(

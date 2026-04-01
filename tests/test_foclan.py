@@ -421,3 +421,48 @@ def test_run_benchmark_with_mock_generation(tmp_path: Path, monkeypatch: pytest.
     assert tmp_path.exists()
     assert Path(report["json_path"]).exists()
     assert Path(report["markdown_path"]).exists()
+
+
+def test_llm_first_let_and_return_sugar_validate() -> None:
+    program = parse_program(
+        """
+        let active_users
+        in users
+        keep active
+        count
+        end
+
+        let paid_orders
+        in orders
+        keep paid
+        count
+        end
+
+        return active_users paid_orders
+        """
+    )
+
+    validate_program(program)
+
+
+def test_python_from_and_sql_from_parse() -> None:
+    program = parse_program(
+        """
+        let history
+        sql from filters
+        SELECT month_start AS month, revenue AS sales
+        FROM sales_monthly
+        WHERE month_start BETWEEN %(start_month)s AND %(end_month)s
+        endsql
+        end
+
+        python from history_filters window_size
+        def solve(inputs):
+            return []
+        endpython
+        out
+        """
+    )
+
+    assert program.branches["history"].flow[0].op == "sql_from"
+    assert program.main_flow[0].op == "python_from"

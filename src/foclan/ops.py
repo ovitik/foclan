@@ -60,6 +60,10 @@ BUILTIN_SPECS: dict[str, BuiltinSpec] = {
     "split": BuiltinSpec(1, None),
     "join": BuiltinSpec(1, None),
     "call": BuiltinSpec(1, None),
+    "python": BuiltinSpec(1, 1),
+    "python_from": BuiltinSpec(2, None),
+    "sql": BuiltinSpec(1, 1),
+    "sql_from": BuiltinSpec(2, None),
 }
 
 ZERO_ARG_ELEMENT_OPS = {"id", "lower", "upper", "trim", "len", "keys", "vals", "not"}
@@ -239,6 +243,22 @@ def apply_builtin(
             raise FocusRuntimeError(f"Unknown host function '{args[0]}'.")
         parsed_args = [parse_literal(arg) for arg in args[1:]]
         return host_functions[args[0]](focus, *parsed_args)
+    if op == "python":
+        if not host_functions or "python" not in host_functions:
+            raise FocusRuntimeError("Unknown host function 'python'.")
+        return host_functions["python"](focus, args[0])
+    if op == "python_from":
+        if not host_functions or "python_from" not in host_functions:
+            raise FocusRuntimeError("Unknown host function 'python_from'.")
+        return host_functions["python_from"](focus, *args)
+    if op == "sql":
+        if not host_functions or "sql" not in host_functions:
+            raise FocusRuntimeError("Unknown host function 'sql'.")
+        return host_functions["sql"](focus, args[0])
+    if op == "sql_from":
+        if not host_functions or "sql_from" not in host_functions:
+            raise FocusRuntimeError("Unknown host function 'sql_from'.")
+        return host_functions["sql_from"](focus, *args)
 
     raise UnknownOp(f"Unknown op '{op}'.")
 
